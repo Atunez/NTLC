@@ -93,6 +93,19 @@ module Lifting where
   i-nat f x = refl
 open Lifting
 
+-- module Types where
+
+-- -- 𝕋 > bT
+-- data 𝕋 (A : Set) : Set where
+--   Tvar : A → 𝕋 A 
+--   Fun : 𝕋 A → 𝕋 A → 𝕋 A
+--   -- All : 𝕋 (↑ A) → 𝕋 A
+
+-- 𝕋Env : Set → Set → Set
+-- 𝕋Env A X = X → 𝕋 A 
+
+-- open Types
+
 module Terms where
   -- LAMBDA TERMS
   -- Λ is \GL
@@ -109,6 +122,14 @@ module Terms where
   Λ⁰ : Set
   Λ⁰ = Λ ⊥
 
+  -- -- : is \: ∶ 
+  -- data _⊢_∶_ {A X : Set} : 𝕋Env A X → Λ X → 𝕋 A → Set where 
+  --   Ax : ∀ Γ x → Γ ⊢ var x ∶ Γ x 
+  --   App : ∀ Γ {M N : Λ X} {α β : 𝕋 A} → Γ ⊢ M ∶ (Fun α β) → Γ ⊢ N ∶ α → Γ ⊢ (app M N) ∶ β 
+  --   Abs : ∀ Γ {M : Λ (↑ X)} {α β : 𝕋 A} → (io Γ α) ⊢ M ∶ β → Γ ⊢ (abs M) ∶ Fun α β  
+  --   -- APP : ∀ Γ {M : Λ X} {Ψ : 𝕋 (↑ A)} → Γ ⊢ M ∶ All Ψ → (α : 𝕋 A) → Γ ⊢ M ∶ (io id α Ψ)
+  --   -- ABS : ∀ Γ {M : Λ X} {Ψ : 𝕋 (↑ A)} → (∀ (α : 𝕋 A) → Γ ⊢ M ∶ io id α Ψ) → Γ ⊢ M ∶ All Ψ 
+  
   -- Congruence
   var≡ : ∀ {X} {x y : X} → x ≡ y → var x ≡ var y
   var≡ = ext var
@@ -739,6 +760,24 @@ wtos : ∀ {X : Set} {M N : Λ X} → M →w N → M →s N
 wtos ε→w = append→s ε→w (refl→s _)
 wtos (Z c→w red) = app→s (wtos red) (refl→s Z)
 
+-- Data Rel x y, Equ y ≡ y' > Rel x y'
+Rel : Set → Set₁
+Rel X = X → X → Set
+
+data _* {X : Set} (R : Rel X) : Rel X where
+  ε* : ∀ (x : X) → (R *) x x
+  c* : ∀ {x y z : X} → R x y → (R *) y z → (R *) x z
+
+append : ∀ {X : Set} {R : Rel X} {x y z : X} → (R *) x y → (R *) y z → (R *) x z
+append (ε* x) yz = yz
+append (c* r xy) yz = c* r (append xy yz)
+
+≡R : ∀ {X : Set} {R : Rel X} {x y z : X} → R x y → y ≡ z → R x z 
+≡R input refl = input
+
+≡→s' : ∀ {X : Set} {M N N' : Λ X} → M →s N → N ≡ N' → M →s N'
+≡→s' = ≡R {R = _→s_}
+
 ≡→w :  ∀ {X : Set}  {M N N' : Λ X} → M →w N → N ≡ N' → M →w N'
 ≡→w red refl = red
 
@@ -753,14 +792,21 @@ wtos (Z c→w red) = app→s (wtos red) (refl→s Z)
 -- randomred red = ?
 
 
+isthistrue : ∀ {X : Set} → Λ↑ ∘ i ≃ Λ→ {X = X} i
+isthistrue x = refl
+
+
+
 i→w : ∀ {X : Set} {x y : Λ X} → x →w y → Λ↑ (i x) →w Λ↑ (i y)
-i→w {X} {(app (abs M) N)} {.(bind (io var N) M)} ε→w = ≡→w (ε→w) 
-  (((~ bind-nat2 (↑→ i) (io var (Λ→ i N)) M) ! (~ ext≃ (bind-ext (io-var-nat i N)) refl)) ! (~ bind-nat1 i (io var N) M))
+i→w {X} {(app (abs M) N)} {.(bind (io var N) M)} ε→w = ≡→w (ε→w) ((~ bind-nat2 (↑→ i) (io var (Λ→ i N)) M) !
+   ((~ ext≃ (bind-ext (io-var-nat i N)) (refl {a = M})) 
+   ! (~ bind-nat1 i (io var N) M)))
+  -- (((~ bind-nat2 (↑→ i) (io var (Λ→ i N)) M) ! (~ ext≃ (bind-ext {f = Λ→ i ∘ io var N} {g = io var (Λ→ i N) ∘ ↑→ i} (io-var-nat i N)) refl)) ! (~ bind-nat1 i (io var N) M))
 i→w (Z c→w red) = Λ→ (λ z → i z) Z c→w i→w red
 
 Λ→→w : ∀ {X Y : Set} {x y : Λ (↑ X)} (f : (↑ X) → Y) → x →w y → Λ→ f x →w Λ→ f y
 Λ→→w {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} f ε→w = ≡→w ε→w 
-  (~ (bind-nat1 f (io var N) M ! (ext≃ (bind-ext (io-var-nat f N)) refl ! bind-nat2 (↑→ f) (io var (Λ→ f N)) M)))
+  (~ (bind-nat1 f (io var N) M ! (ext≃ (bind-ext (io-var-nat f N)) (refl {a = M}) ! bind-nat2 (↑→ f) (io var (Λ→ f N)) M)))
 Λ→→w {X} {Y} {.(app _ Z)} {.(app _ Z)} f (Z c→w red) = Λ→ f Z c→w Λ→→w f red
 
 Λ→→s : ∀ {X Y : Set} {x y : Λ (↑ X)} (f : (↑ X) → Y) → x →s y → Λ→ f x →s Λ→ f y
