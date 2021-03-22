@@ -264,11 +264,14 @@ appendR (c* r xy) yz = c* r (appendR xy yz)
 ≡R : ∀ {X : Set} {R : Rel X} {x y z : X} → R x y → y ≡ z → R x z 
 ≡R input refl = input
 
+-- i→R : ∀ {X : Set} (R : Rel (Λ X)) (R' : Rel (Λ (↑ X))) {x y : Λ X} → R x y → R' (Λ↑ (i x)) (Λ↑ (i y))
+
+
 infix 15 _⟶_
 
 -- Beta reduction
 -- If M,N : Λ X, then M ⟶ N = { ρ : M →β N }
-data _⟶_ {X : Set} : Λ X → Λ X → Set where
+data _⟶_ {X : Set} : Rel (Λ X) where
   redex : ∀ M N → app (abs M) N ⟶ (M [ N ])
   abs→  : ∀ {P Q} → P ⟶ Q → abs P ⟶ abs Q
   appL→ : ∀ {L M Z} → L ⟶ M → app L Z ⟶ app M Z
@@ -284,8 +287,11 @@ map⟶ f (appL→ r)   = appL→ (map⟶ f r)
 map⟶ f (appR→ r)   = appR→ (map⟶ f r)
 
 -- Multi-step beta reduction
-_⇒_ : ∀ {X : Set} → Λ X → Λ X → Set
+_⇒_ : ∀ {X : Set} → Rel (Λ X)
 _⇒_ = (_⟶_)*
+
+⇒≡ : ∀ {X : Set} {M N N' : Λ X} → M ⇒ N → N ≡ N' → M ⇒ N'
+⇒≡ = ≡R {R = (_⟶_)*}
 
 append⇒ : ∀ {X : Set} {L M N : Λ X} → L ⇒ M → M ⇒ N → L ⇒ N
 append⇒ = appendR {R = _⟶_}
@@ -293,7 +299,7 @@ append⇒ = appendR {R = _⟶_}
 infix 15 _⇉_
 
 -- Parallel Reduction
-data _⇉_ {X : Set} : Λ X → Λ X → Set where
+data _⇉_ {X : Set} : Rel (Λ X) where
   ε⇉   : ∀ {x : X} → var x ⇉ var x
   abs⇉ : ∀ {M} {N} → M ⇉ N → abs M ⇉ abs N
   app⇉ : ∀ {M M' N N'} → M ⇉ M' → N ⇉ N' → app M N ⇉ app M' N'
@@ -315,8 +321,14 @@ refl⇉ (app M₀ M₁) = app⇉ (refl⇉ M₀) (refl⇉ M₁)
 refl⇉ (abs M) = abs⇉ (refl⇉ M)
 
 -- Multi-step parallel reduction
-_≡>_ : ∀ {X : Set} → Λ X → Λ X → Set
+_≡>_ : ∀ {X : Set} → Rel (Λ X)
 _≡>_ = (_⇉_)*
+
+≡>≡ : ∀ {X : Set} {M N N' : Λ X} → M ≡> N → N ≡ N' → M ≡> N'
+≡>≡ = ≡R {R = (_⇉_)*}
+
+append≡> : ∀ {X : Set} {L M N : Λ X} → L ≡> M → M ≡> N → L ≡> N
+append≡> = appendR {R = _⇉_}
 
 bind⇉ : ∀ {X Y : Set} (M : Λ X) (f g : X → Λ Y)
           → (∀ (x : X) → f x ⇉ g x)
@@ -358,7 +370,6 @@ open Reductions
 
 module ChurchRosserTheorem where
 
-
 -- Conf⇉ M N = { (Z,l,r) | Z ∈ Λ X , l : M ⇉ Z, r : N ⇉ Z }
 -- Conf⇉ M N = { Z ∈ Λ X |  M ⇉ Z ∧ N ⇉ Z }
 record Conf {X : Set} (R : Rel X) (M : X) (N : X) : Set where
@@ -371,12 +382,14 @@ open Conf
 
 -- These two allow for different starting points
 -- ie, reductions are X > Z and Y > Z
-Conf⇉ : ∀ {X : Set} → Λ X → Λ X → Set
+Conf⇉ : ∀ {X : Set} → Rel (Λ X)
 Conf⇉ = Conf _⇉_
 
-Conf≡> : ∀ {X : Set} → Λ X → Λ X → Set
+Conf≡> : ∀ {X : Set} → Rel (Λ X)
 Conf≡> = Conf _≡>_
 
+Conf⇒ : ∀ {X : Set} → Rel (Λ X)
+Conf⇒ = Conf _⇒_
 
 -- These two DONT allow for different starting points
 -- ie, reductions are X > Z and X > Z
@@ -417,4 +430,241 @@ dp⇉ (red⇉ ρ₀ ρ₁) (red⇉ σ₀ σ₁) =
   in conf Z l r
 
 
+StripLemmaFirst : ∀ {X : Set} {M N M' : Λ X} → M ≡> N → M ⇉ M' → SConf⇉ N -- N ⇉ Z
+StripLemmaFirst  {X} {M} {.M} {M'} (ε* _) single = conf M' single single
+StripLemmaFirst (c* x multi) single =
+  let (conf Q l r) = dp⇉ x single
+      (conf P l' r') = StripLemmaFirst multi l
+  in conf P l' l'
+
+StripLemmaSecond : ∀ {X : Set} {M N M' : Λ X} → M ≡> N → M ⇉ M' → SConf≡> M' -- M' ≡> Z
+StripLemmaSecond {X} {M} {.M} {M'} (ε* _) single = conf M' (ε* _) (ε* _)
+StripLemmaSecond {X} {M} {N} {M'} (c* x multi) single =
+  let (conf Q l r) = dp⇉ x single
+      (conf P l' r') = StripLemmaSecond multi l
+  in conf P (c* r r') (c* r r')
+
+StripLimit : ∀ {X : Set} {M N P : Λ X} (red1 : M ≡> N) (red2 : M ⇉ P) → node (StripLemmaFirst (red1) (red2)) ≡ node (StripLemmaSecond (red1) (red2))
+StripLimit (ε* _) red2 = refl
+StripLimit (c* x red1) red2 =
+  let (conf Z l r) = dp⇉ x red2
+  in StripLimit red1 l
+
+dp≡> :  ∀ {X : Set} {M N P : Λ X} → M ≡> N → M ≡> P → Conf≡> N P
+dp≡> {X} {M} {.M} {P} (ε* _) red2 = conf P red2 (ε* _)
+dp≡> {X} {M} {N} {P} (c* x red1) red2 = 
+  let (conf Z l r) = StripLemmaSecond red2 x
+      (conf Z₁ l₂ r₂) = StripLemmaFirst red2 x
+      (conf G l₁ r₁) = dp≡> red1 r
+  in conf G l₁ (c* (⇉≡ r₂ (StripLimit red2 x)) r₁)
+
+-- Helper Functions Start
+
+absred : ∀ {X : Set} {M N : Λ (↑ X)} → M ⇒ N → abs M ⇒ abs N
+absred (ε* _) = (ε* _)
+absred (c* x input) = c* (abs→ x) (absred input)
+
+appred : ∀ {X : Set} {M M' N N' : Λ X} → M ⇒ M' → N ⇒ N' → app M N ⇒ app M' N'
+appred (ε* _) (ε* _) = (ε* _)
+appred (ε* _) (c* x input2) = c* (appR→ x) (appred (ε* _) input2)
+appred (c* x input1) input2 = c* (appL→ x) (appred input1 input2)
+
+redred : ∀ {X : Set} {M M' : Λ (↑ X)} {N N' : Λ X} → M ⇒ M' → N ⇒ N' → app (abs M) N ⇒ M' [ N' ]
+redred (ε* _) (ε* _) = c* (redex _ _) (ε* _)
+redred (ε* _) (c* x input2) = c* (appR→ x) (redred (ε* _) input2)
+redred (c* x input1) input2 = c* (appL→ (abs→ x)) (redred input1 input2)
+
+-- Helper Functions End
+
+
+ParltoMB : ∀ {X : Set} {M N : Λ X} → M ⇉ N → M ⇒ N
+ParltoMB ε⇉ = ε* _
+ParltoMB (abs⇉ red) = absred (ParltoMB red)
+ParltoMB (app⇉ red red₁) = appred (ParltoMB red) (ParltoMB red₁)
+ParltoMB (red⇉ red red₁) = redred (ParltoMB red) (ParltoMB red₁)
+
+MPtoMB : ∀ {X : Set} {M N : Λ X} → M ≡> N → M ⇒ N
+MPtoMB (ε* _) = (ε* _)
+MPtoMB (c* x red) = append⇒ (ParltoMB x) (MPtoMB red)
+
+BtoP : ∀ {X : Set} {M N : Λ X} → M ⟶ N → M ⇉ N
+BtoP (redex M N) = red⇉ (refl⇉ M) (refl⇉ N)
+BtoP (abs→ red) = abs⇉ (BtoP red)
+BtoP (appL→ {Z} {P} {Q} red) = app⇉ (BtoP red) (refl⇉ Q)
+BtoP (appR→ {Z} {P} {Q} red) = app⇉ (refl⇉ Z) (BtoP red)
+
+ParltoMP : ∀ {X : Set} {M N : Λ X} → M ⇉ N → M ≡> N
+ParltoMP red = c* red (ε* _)
+
+MBtoMP : ∀ {X : Set} {M N : Λ X} → M ⇒ N → M ≡> N
+MBtoMP (ε* _) = (ε* _)
+MBtoMP (c* x input) = append≡> (ParltoMP (BtoP x)) (MBtoMP input)
+
+cr⇒ : ∀ {X : Set} {M N : Λ X} → M ⇒ N → ∀ {L : Λ X} → M ⇒ L → Conf⇒ N L
+cr⇒ (ε* _) {L} red2 = conf L red2 (ε* _)
+cr⇒ {X} {M} {N} (c* x red1) {.M} (ε* _) = conf N (ε* _) (c* x red1)
+cr⇒ {X} {M} {N} (c* x red1) {L} (c* x₁ red2) = 
+  let (conf Z l r) = dp⇉ (BtoP x) (BtoP x₁)
+      seered2 = MBtoMP red2
+      seer = ParltoMP r
+      (conf Q l₁ r₁) = dp≡> seer seered2
+      seered1 = MBtoMP red1
+      seel = ParltoMP l
+      (conf Q' l₂ r₂) = dp≡> seel seered1
+      (conf G l₃ r₃) = dp≡> l₁ l₂
+  in conf G (append⇒ (MPtoMB r₂) (MPtoMB r₃)) (append⇒ (MPtoMB r₁) (MPtoMB l₃))
+
+
 open ChurchRosserTheorem
+
+module Standarization where
+
+data _→w_ {X : Set} : Rel (Λ X) where
+  ε→w : ∀ {M N}  → app (abs M) N →w (M [ N ])
+  _c→w_ : ∀ {M N} (Z : Λ X) → M →w N → app M Z →w app N Z
+
+data _→s_ {X : Set} : Rel (Λ X) where
+  ε→s :   ∀ {x : X} → var x →s var x
+  app→s : ∀ {M M' N N'} → M →s M' → N →s N' → app M N →s app M' N'
+  abs→s : ∀ {M} {N} → M →s N → abs M →s abs N
+  append→s : ∀ {M M' N} → M →w M' → M' →s N → M →s N
+
+refl→s :  ∀ {X : Set} (M : Λ X) → M →s M
+refl→s (var x) = ε→s
+refl→s (app M M₁) = app→s (refl→s M) (refl→s M₁)
+refl→s (abs M) = abs→s (refl→s M)
+
+wtos : ∀ {X : Set} {M N : Λ X} → M →w N → M →s N
+wtos ε→w = append→s ε→w (refl→s _)
+wtos (Z c→w red) = app→s (wtos red) (refl→s Z)
+
+≡→s : ∀ {X : Set} {M N N' : Λ X} → M →s N → N ≡ N' → M →s N'
+≡→s = ≡R {R = _→s_}
+
+≡→w :  ∀ {X : Set}  {M N N' : Λ X} → M →w N → N ≡ N' → M →w N'
+≡→w = ≡R {R = _→w_}
+
+i→w : ∀ {X : Set} {x y : Λ X} → x →w y → Λ↑ (i x) →w Λ↑ (i y)
+i→w {X} {(app (abs M) N)} {.(bind (io var N) M)} ε→w = ≡→w (ε→w) 
+   ((~ bind-nat2 (↑→ i) (io var (Λ→ i N)) M) !
+   ((~ ext≃ (bind-ext (io-var-nat i N)) (refl {a = M})) 
+   ! (~ bind-nat1 i (io var N) M)))
+i→w (Z c→w red) = Λ→ (λ z → i z) Z c→w i→w red
+      
+Λ→→w : ∀ {X Y : Set} {x y : Λ (↑ X)} (f : (↑ X) → Y) → x →w y → Λ→ f x →w Λ→ f y
+Λ→→w {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} f ε→w = ≡→w ε→w 
+  (~ (bind-nat1 f (io var N) M ! (ext≃ (bind-ext (io-var-nat f N)) (refl {a = M}) 
+  ! bind-nat2 (↑→ f) (io var (Λ→ f N)) M)))
+Λ→→w {X} {Y} {.(app _ Z)} {.(app _ Z)} f (Z c→w red) = Λ→ f Z c→w Λ→→w f red
+
+Λ→→s : ∀ {X Y : Set} {x y : Λ (↑ X)} (f : (↑ X) → Y) → x →s y → Λ→ f x →s Λ→ f y
+Λ→→s f ε→s = ε→s
+Λ→→s f (app→s red red₁) = app→s (Λ→→s f red) (Λ→→s f red₁)
+Λ→→s f (abs→s red) = abs→s (Λ→→s (↑→ f) red)
+Λ→→s f (append→s x red) = append→s (Λ→→w f x) (Λ→→s f red)
+
+i→s : ∀ {X : Set} {x y : Λ X} → x →s y → Λ↑ (i x) →s Λ↑ (i y)
+i→s ε→s = ε→s
+i→s (app→s red red₁) = app→s (i→s red) (i→s red₁)
+i→s (abs→s red) = abs→s (Λ→→s (↑→ i) red)
+i→s (append→s x red) = append→s (i→w x) (i→s red)
+
+bind→wsubst : ∀ {X Y : Set} {M1 M2 : Λ X} {f : X → Λ Y} → M1 →w M2 → bind f M1 →w bind f M2
+bind→wsubst {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} {f} ε→w = ≡→w ε→w 
+  ((((~ bind-law (Λ↑ ∘ ↑→ f) (io var (bind f N)) M) ! 
+  bind-ext (λ { (i x) → (~ bind-nat2 i (io var (bind f N)) (f x)) 
+  ! buildproofv2 (f x) ; o → refl}) M) ! bind-law (io var N) f M))
+bind→wsubst (Z c→w red) = bind _ Z c→w bind→wsubst red
+
+bind→ssubst : ∀ {X Y : Set} {M1 M2 : Λ X} → M1 →s M2
+             → ∀ {f g : X → Λ Y}
+             → (∀ x → f x →s g x)
+             → bind f M1 →s bind g M2
+bind→ssubst ε→s prf = prf _
+bind→ssubst (app→s red red₁) prf = app→s (bind→ssubst red prf) (bind→ssubst red₁ prf)
+bind→ssubst (abs→s red) prf = abs→s (bind→ssubst red λ { (i x) → i→s (prf x) ; o → ε→s })
+bind→ssubst (append→s x red) prf = append→s (≡→w (bind→wsubst x) refl) (bind→ssubst red prf)
+
+redsubst→s : ∀ {X : Set}  {M M' : Λ X} (N : Λ (↑ X)) → M →s M' → N [ M ] →s N [ M' ]
+redsubst→s N red = bind→ssubst (refl→s N) λ {(i x) → ε→s ; o → red}
+
+subst→s : ∀ {X : Set}  {N N' : Λ X} {M M' : Λ (↑ X)} → M →s M' → N →s N' → M [ N ] →s M' [ N' ]
+subst→s red red2 = bind→ssubst red λ { (i x) -> ε→s ; o -> red2 } 
+
+-- Checker Problems workaround.
+
+data Nat : Set where
+  O : Nat
+  S : Nat → Nat
+
+_++_ : Nat → Nat → Nat
+O ++ n = n
+(S m) ++ n = S (m ++ n)
+
+len : ∀ {X : Set} {M M' : Λ X} → M →s M' → Nat
+len ε→s = O
+len (app→s r r₁) = len r ++ len r₁
+len (abs→s r) = len r
+len (append→s x r) = S (len r)
+
+data lenOf {X : Set} : ∀ {M M' : Λ X} → M →s M' → Nat → Set where
+  lenε   : ∀ {x : X} → lenOf (ε→s {X} {x}) O
+  lenApp : ∀ {M M' N N'} → (r0 : M →s M') → (r1 : N →s N') → (m n : Nat)
+          → lenOf r0 m → lenOf r1 n → lenOf (app→s r0 r1) (m ++ n)
+  lenAbs : ∀ {M} {N} → (r0 : M →s N) → (m : Nat) → lenOf r0 m → lenOf (abs→s r0) m
+  lenRed : ∀ {M M' N} → (x : M →w M') → (r : M' →s N) → (m : Nat)
+          → lenOf r m → lenOf (append→s x r) (S m)
+
+specialcasetranssw : ∀ {X : Set} {N M : Λ X} {M' : Λ (↑ X)} (r : M →s app (abs M') N)
+                       → (n : Nat) → lenOf r n → M →s M' [ N ]
+specialcasetranssw .(app→s (abs→s r0) r1) .n (lenApp (abs→s r0) r1 O n prf prf₁) =
+ append→s ε→w (subst→s r0 r1)
+specialcasetranssw .(app→s (abs→s r0) r1) .(S (m ++ n)) 
+  (lenApp (abs→s r0) r1 (S m) n prf prf₁) = append→s ε→w (subst→s r0 r1 )
+specialcasetranssw .(app→s (append→s x r0) r1) .(S (m ++ n)) 
+  (lenApp (append→s x r0) r1 .(S m) n (lenRed .x .r0 m prf) prf₁) =
+  append→s (_ c→w x) (specialcasetranssw (app→s r0 r1) (m ++ n) (lenApp r0 r1 m n prf  prf₁))
+specialcasetranssw .(append→s x r) .(S m) (lenRed x r m prf) = 
+  append→s x (specialcasetranssw r m prf)
+
+BuildLenRed : ∀ {X : Set} {M M' : Λ X} → (r : M →s M') → lenOf r (len r)
+BuildLenRed ε→s = lenε
+BuildLenRed (app→s red red₁) = 
+  lenApp red red₁ (len red) (len red₁) (BuildLenRed red) (BuildLenRed red₁)
+BuildLenRed (abs→s red) = lenAbs red (len red) (BuildLenRed red)
+BuildLenRed (append→s x red) = lenRed x red (len red) (BuildLenRed red)
+
+-- End of workaround
+
+trans→sw : ∀ {X : Set} {M M' N : Λ X} → M →s M' → M' →w N → M →s N
+trans→sw red ε→w = specialcasetranssw red (len red) (BuildLenRed red)
+trans→sw (app→s red1 red3) (Z c→w red2) = app→s (trans→sw red1 red2) red3
+trans→sw (append→s x red1) (Z c→w red2) = append→s x (trans→sw red1 (Z c→w red2))
+
+trans→s : ∀ {X : Set} {M M' N : Λ X} → M →s M' → M' →s N → M →s N
+trans→s ε→s red2 = red2
+trans→s (app→s red1 red3) (app→s red2 red4) = app→s (trans→s red1 red2) (trans→s red3 red4)
+trans→s (app→s red1 red3) (append→s x red2) = trans→s (trans→sw (app→s red1 red3) x) red2 
+trans→s (abs→s red1) (abs→s red2) = abs→s (trans→s red1 red2)
+trans→s (append→s x red1) red2 = append→s x (trans→s red1 red2)
+
+singlestepstand : ∀ {X : Set} {M M' N : Λ X} → M →s M' → M' ⟶ N → M →s N
+singlestepstand (app→s (abs→s red1) red3) (redex M _) = 
+  trans→s (wtos ε→w) (subst→s red1 red3)
+singlestepstand (app→s (append→s x red1) red3) (redex M _) = 
+  trans→s (app→s (append→s x red1) red3) (wtos ε→w)
+singlestepstand (app→s red1 red3) (appL→ red2) = app→s (singlestepstand red1 red2) red3
+singlestepstand (app→s red1 red3) (appR→ red2) = app→s red1 (singlestepstand red3 red2)
+singlestepstand (abs→s red1) (abs→ red2) = abs→s (singlestepstand red1 red2)
+singlestepstand (append→s x red1) red2 = trans→s (wtos x) (singlestepstand red1 red2)
+
+multistepstand : ∀ {X : Set} {M M' N : Λ X} → M →s M' → M' ⇒ N → M →s N
+multistepstand red1 (ε* _) = red1
+multistepstand red1 (c* x red2) = trans→s red1 (multistepstand (singlestepstand (refl→s _) x) red2)
+
+standarization : ∀ {X : Set} {M N : Λ X} → M ⇒ N → M →s N
+standarization (ε* _) = refl→s _
+standarization (c* x red) = trans→s (singlestepstand (refl→s _) x) (multistepstand (refl→s _) red)
+
+open Standarization
+
