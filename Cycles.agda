@@ -724,6 +724,9 @@ lercherEq3 (app A₁ A₂) (app B₁ B₂) p =
 lercherEq3 A (abs B) p =
   {!   !}
 
+lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → A [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
+lercherEq2 = ?
+
 lercher : ∀ (P : Λ (↑ ⊥)) (Q : Λ ⊥) → P [ Q ] ≡ app (abs P) Q → abs P ≡ ω × Q ≡ ω
 lercher (var (i x)) Q p = ex x falso
 lercher (var o) Q p = ex_falso (<-irrefl (∣ Q ∣) (<-eq _ _ _ (app<R (abs (var o)) Q) (ext ∣_∣ (~ p) ) ) )
