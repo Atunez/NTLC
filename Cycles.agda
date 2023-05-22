@@ -1,63 +1,11 @@
 module Cycles where
 
--- open import Agda.Builtin.Sigma
--- open import Data.Product
-open import Lambda
+open import Lambda public
 
-O++ : ∀ m → m ≡ m ++ O
-O++ O = refl
-O++ (S m) = ext S (O++ m)
-
-S++ : ∀ m n → m ++ S n ≡ S (m ++ n)
-S++ O n = refl
-S++ (S m) n = ext S (S++ m n)
-
-comm++ : ∀ n m → n ++ m ≡ m ++ n
-comm++ O m = O++ m
-comm++ (S n) m = (ext S (comm++ n m) ) ! (~ (S++ m n) )
-
-
--- \| is ∣
-∣_∣  : ∀ {X : Set} → Λ X → Nat
-∣ var x ∣ = O
-∣ abs r ∣ = S ∣ r ∣
-∣ app s t ∣ = S (∣ s ∣  ++ ∣ t ∣)
-
-data _<_ : Nat → Nat → Set where
-  O< : ∀ n → O < S n
-  S< : ∀ n m → n < m → S n < S m
-
-<-eq : ∀ n m l → n < m → m ≡ l → n < l
-<-eq n m l p (refl) = p
-
-<-irrefl : ∀ n → n < n → ⊥
-<-irrefl (S n) (S< n .n p) = <-irrefl n p
-
-tran< : ∀ l n m → l < m → m < n → l < n
--- tran< l n m p q = ?
-tran< .O .(S m) .(S n) (O< .n) (S< n m q) = O< m
-tran< .(S n₁) .(S m) .(S n) (S< n₁ .n p) (S< n m q) = S< _ _ (tran< _ _ _ p q)
-
-<S : ∀ n → n < S n
-<S O = O< O
-<S (S n) = S< n (S n) (<S n)
-
-add<S : ∀ n m → n < (S m ++ n)
-add<S n O = <S n
-add<S n (S m) = tran< n _ _ (add<S n m) (<S _)
-
-add>S : ∀ n m → n < S (n ++ m)
-add>S O m = O< m
-add>S (S n) m = S< _ _ (add>S n m)
-
-abs< : ∀ {X} (s : Λ (↑ X)) → ∣ s ∣ < ∣ abs s ∣
-abs< s = <S ∣ s ∣
-
-app<L : ∀ {X} (s t : Λ X) → ∣ s ∣ < ∣ app s t ∣
-app<L s t =  <-eq (∣ s ∣) _ _ (add<S (∣ s ∣) (∣ t ∣)) (ext S (comm++ ∣ t ∣ ∣ s ∣ ) )
-
-app<R : ∀ {X} (s t : Λ X) → ∣ t ∣ < ∣ app s t ∣
-app<R s t =  add<S (∣ t ∣) (∣ s ∣)
+lenTerm : ∀ {X : Set} → Λ X → Nat
+lenTerm (var x) = O
+lenTerm (app x x₁) = S (lenTerm x ++ lenTerm x₁)
+lenTerm (abs x) = S (lenTerm x)
 
 data _∈_ {X : Set} (x : X) : Λ X → Set where
   here  : x ∈ var x
@@ -65,22 +13,45 @@ data _∈_ {X : Set} (x : X) : Λ X → Set where
   right : ∀ (s : Λ X) → {t : Λ X} → (x ∈ t) → x ∈ app s t
   down  : ∀ {r : Λ (↑ X)} → (i x ∈ r) → (x ∈ abs r)
 
--- occursLemma1 : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) → o ∈ M → M ≡ var o ⊔ ∣ N ∣ < ∣ M [ N ] ∣
--- occursLemma1 .(var o) N here = inl refl
--- occursLemma1 (app s t) N (left p t) = inr (case c1 c2 (occursLemma1 s N p) ) where
---   f = λ x → S (∣ bind (io var N) x ∣ ++ ∣ bind (io var N) t ∣)
---   c1 = λ q → <-eq _ _ _ (add>S ∣ N ∣ _ ) (ext f (~ q))
---   c2 = λ q → tran< _ _ _ q (add>S _ _)
--- occursLemma1 .(app s _) N (right s p) = {!   !}
--- occursLemma1 (abs r) N (down p) = {! inr (case c1 c2 (occursLemma1 r (Λ→ i N) ))  !}
 
--- -- occursLemma2 : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) (x : X) → x ∈ M → M ≡ var x ⊔ ∣ N ∣ < ∣ M [ N ] ∣
+occursLemma2 : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) (x : X) → (i x) ∈ M → M ≡ var (i x) ⊔ lenTerm N < lenTerm (M [ N ])
+occursLemma2 .(var (i x)) n x here = inl (refl)
+occursLemma2 (app s t) N x (left prf t) = inr (case c1 c2 (occursLemma2 s N x prf)) where
+  f = λ x → S (lenTerm (bind (io var N) x) ++ lenTerm (bind (io var N) t))
+  c1 = λ q → <-eq {!   !} (ext f (~ q))
+  c2 = λ q → tran< _ _ _ q (add>S _ _)
+occursLemma2 (app s t) n x (right s prf) = inr (case c1 c2 (occursLemma2 t n x prf)) where
+  c1 = {!   !}
+  c2 = λ q → tran< _ _ _ q (add<S _ _)
+occursLemma2 (abs r) n x (down prf) = inr (case c1 c2 (occursLemma2 r ((Λ↑ (i n))) (i x) prf)) where
+  f = λ x → S ( lenTerm (bind (λ y → Λ↑ (↑→ (io var n) y)) x))
+  c1 = λ q → <-eq ({!   !}) (ext f (~ q))
+  c2 = {!   !}
 
--- ω : Λ ⊥
--- ω = abs (app (var o) (var o))
 
--- app≡inv : ∀ {X} (M M' N N' : Λ X) → app M N ≡ app M' N' → M ≡ M' × N ≡ N'
--- app≡inv M .M N .N refl = ( refl , refl )
+liftingKeepsLength : ∀ {X : Set} (M : Λ X) → lenTerm M ≡ lenTerm (Λ→ i M)
+liftingKeepsLength N = {!  N !}
+
+occursLemma1 : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) → o ∈ M → M ≡ var o ⊔ lenTerm N < lenTerm (M [ N ])
+occursLemma1 .(var o) N here = inl refl
+occursLemma1 (app s t) N (left p t) = inr (case c1 c2 (occursLemma1 s N p) ) where
+  f = λ x → S ( lenTerm (bind (io var N) x) ++ lenTerm (bind (io var N) t) )
+  c1 = λ q → <-eq (add>S (lenTerm N) _) (ext f (~ q))
+  c2 = λ q → tran< _ _ _ q (add>S _ _)
+occursLemma1 (app s t) N (right s p) = inr (case c1 c2 (occursLemma1 t N p)) where
+  f = λ x → S ( lenTerm (bind (io var N) s) ++ lenTerm (bind (io var N) x) )
+  c1 = λ q → <-eq (add<S (lenTerm N) _) (ext f (~ q))
+  c2 = λ q → tran< _ _ _ q (add<S _ _)
+occursLemma1 (abs r) N (down p) = inr (case c1 c2 (occursLemma2 r (Λ↑ (i N)) o p)) where
+  f = λ x → S ( lenTerm (bind (λ y → Λ↑ (↑→ (io var N) y)) x))
+  c1 = λ q → <-eq (<S-eq (<S _) (liftingKeepsLength N)) (ext f (~ q))
+  c2 = λ q → {!   !} -- <-deq q (~ (liftingKeepsLength N)) {!   !}
+
+ω : Λ ⊥
+ω = abs (app (var o) (var o))
+
+app≡inv : ∀ {X} (M M' N N' : Λ X) → app M N ≡ app M' N' → M ≡ M' × N ≡ N'
+app≡inv M .M N .N refl = ( refl , refl )
 
 -- lercherEq3 : ∀ {X} (A : Λ X) (B : Λ (↑ X)) → B [ A ] ≡ A → B ≡ var o ⊔ B ≡ Λ→ i A
 -- lercherEq3 A (var (i x)) p = inr (ext (Λ→ i) p)
@@ -96,12 +67,76 @@ data _∈_ {X : Set} (x : X) : Λ X → Set where
 -- -- lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → A [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
 -- -- lercherEq2 = ?
 
--- -- lercher : ∀ (P : Λ (↑ ⊥)) (Q : Λ ⊥) → P [ Q ] ≡ app (abs P) Q → abs P ≡ ω × Q ≡ ω
--- -- lercher (var (i x)) Q p = ex x falso
--- -- lercher (var o) Q p = ex_falso (<-irrefl (∣ Q ∣) (<-eq _ _ _ (app<R (abs (var o)) Q) (ext ∣_∣ (~ p) ) ) )
--- -- lercher (app P₁ P₂) Q p =
--- --   let (p1 , p2) = app≡inv _ _ _ _ p
--- --    in {!   !}
+eqParts : ∀ {X : Set} {M N M' N' : Λ X} → app M N ≡ app M' N' → M ≡ M' × N ≡ N'
+eqParts refl = refl , refl
+
+postulate
+  em : ∀ (A : Set) → A ⊔ ¬ A
+
+easiest : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) → (o ∈ M) → (M ≡ var o) ⊔ lenTerm M < lenTerm (M [ N ])
+easiest m N p = {!   !}
+
+-- Consider M [ N ], if M contains o, and N isn't var. 
+-- then | M | < | M [ N ] | (PS, in our case, N is abs)
+easyCase : ∀ (q : Λ (↑ (↑ ⊥))) (l : Λ ⊥)  → (o ∈ q) → lenTerm l < lenTerm (bind (io var l) (abs q))
+easyCase q l op = {! easiest q (Λ↑ (i l)) op  !}
+
+check : ∀ {X : Set} (M : Λ (↑ (↑ X))) → ¬ (o ∈ (abs M)) → ¬ (o ∈ M)
+check .(var o) op here = {!   !}
+check .(app _ t) op (left n t) = {!   !}
+check .(app s _) op (right s n) = {!   !}
+check .(abs _) op (down n) = {!   !}
+
+notPresent : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) → ¬ (o ∈ M) → lenTerm M ≡ lenTerm (M [ N ])
+notPresent (var (i x)) N prf = refl
+notPresent (var o) N prf = exfalso (prf here)
+notPresent (app M M₁) N prf = ext S {!   !}
+notPresent {X} (abs M) N prf = ext S (notPresent M (Λ↑ (i N)) (check M prf) ! ext lenTerm {!  !})
+
+work : ∀ (q : Λ (↑ (↑ ⊥))) (l : Λ ⊥) → app (var o) (abs q) [ l ] ≡ app (abs (app (var o) (abs q))) l → o ∈ q → ⊥ 
+work q l prf qp = <-irrefl {! O !} (<-eq {!   !} (ext (lenTerm) rhs)) where
+  lhs = (_×_.fst (eqParts prf))
+  rhs = (_×_.snd (eqParts prf))
+  left,right = eqParts prf
+
+fl : ∀ {X : Set} {N M : Λ X} → N ≡ M → lenTerm M ≡ lenTerm N
+fl refl = refl 
+
+impossibleProof : ∀ {X : Set} (N M : Λ X) → lenTerm N < lenTerm M ⊔ lenTerm M < lenTerm N → ¬ (M ≡ N)
+impossibleProof M .M (inl x) refl = <-irrefl (lenTerm M) x
+impossibleProof N .N (inr x) refl = <-irrefl (lenTerm N) x
+
+impossible2 : ∀ {X : Set} {N M Q : Λ X} → M ≡ N → N ≡ Q → ¬ (M ≡ Q) → ⊥
+impossible2 refl refl q = q refl
+
+lercher : ∀ (P : Λ (↑ ⊥)) (Q : Λ ⊥) → P [ Q ] ≡ app (abs P) Q → abs P ≡ ω × Q ≡ ω
+lercher (var (i x)) q prf = exfalso x
+lercher (var o) q prf = exfalso (<-irrefl lt (<-eq (<<S lt) (ext (lenTerm) (~ prf)))) where lt = lenTerm q
+lercher (app (var o) (var o)) l prf = refl , _×_.fst (eqParts prf)
+-- Given: l = abs (app o (abs q))
+-- And l = (abs q) [l]
+-- Either q has o or not, if it does:
+  -- Then, l isn't consistent... since l = abs l {at the least}
+-- lercher (app (var o) (abs q)) l prf = exfalso (case (λ t → work q l prf t) c2 (em (o ∈ q))) where
+--   -- prf states: app l (abs q [l]) = app (abs ...) l
+--   -- then: l = abs ...
+--   -- and:  l = (abs q) [l]
+--   -- AND q contains o...
+--   c1 = λ t -> exfalso (<-irrefl (lenTerm l) {! lenPart   !})  
+--     -- lenPart = easyCase q {! abs (app (var o) (abs q)) !} {! t  !}}
+    
+--   c2 = λ t → {!   !}
+-- lercher (app (abs p) q) l prf = {!   !}
+lercher (app (var (i x)) (app q q₁)) l prf = exfalso x
+lercher (app (var o) (app q q₁)) l prf = {! q₁  !}
+lercher (app (var o) (abs (var (i (i x))))) l prf = exfalso x
+lercher (app (var o) (abs (var (i o)))) l prf = exfalso (<-irrefl (lenTerm l) (<-eq (<-eq (<S (lenTerm l)) (ext S (liftingKeepsLength l))) (ext (lenTerm) (_×_.snd (eqParts prf)))))
+lercher (app (var o) (abs (app (var (i (i x))) q₁))) l prf = exfalso x
+lercher (app (var o) (abs (app (var (i o)) q₁))) l prf = {!   !}
+lercher (app (var o) (abs (app (var o) (var (i (i x)))))) l prf = exfalso x
+lercher (app (var o) (abs (app (var o) (var (i o))))) l prf = exfalso (<-irrefl (lenTerm l) (<-eq (<-eq (<<S (lenTerm l)) (ext S (ext S (liftingKeepsLength l)))) (ext (lenTerm) (_×_.snd (eqParts prf)))))
+lercher (app (var o) (abs (app (var o) (abs q₁)))) l prf = {!   !}
+lercher (app (abs p) q) l prf = {!   !}
 
 -- module CycleStuff where
 
@@ -122,3 +157,4 @@ data _∈_ {X : Set} (x : X) : Λ X → Set where
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
+  

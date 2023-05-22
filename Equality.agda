@@ -81,3 +81,7 @@ case f g (inr x) = g x
 
 exfalso : ∀ {X : Set} → ⊥ → X
 exfalso ()
+
+
+¬_ : Set → Set
+¬ A = A → ⊥
