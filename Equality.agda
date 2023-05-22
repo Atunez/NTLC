@@ -54,6 +54,9 @@ tran fg gh x = fg x ! gh x
 ext : ∀ {X Y : Set} (f : X → Y) {x y : X} → x ≡ y → f x ≡ f y
 ext f refl = refl
 
+iext : ∀ {X Y : Set} {f : X → Y} {x y : X} → x ≡ y → f x ≡ f y
+iext refl = refl
+
 ext≃ : ∀ {X Y : Set} {f g : X → Y} → f ≃ g → ∀ {x y : X} → x ≡ y → f x ≡ g y
 ext≃ fg refl = fg _
 

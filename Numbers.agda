@@ -22,6 +22,8 @@ comm++ : ∀ n m → n ++ m ≡ m ++ n
 comm++ O m = O++ m
 comm++ (S n) m = (ext S (comm++ n m) ) ! (~ (S++ m n) )
 
+tran++ : ∀ {n m p q} → n ≡ m → p ≡ q → n ++ p ≡ m ++ q
+tran++ refl refl = refl
 
 data _<_ : Nat → Nat → Set where
   O< : ∀ n → O < S n
@@ -53,8 +55,8 @@ add>S : ∀ n m → n < S (n ++ m)
 add>S O m = O< m
 add>S (S n) m = S< _ _ (add>S n m)
 
-<-deq : ∀ {m n p q} → m < n → m ≡ p → n ≡ q → p < q
-<-deq p refl refl = p 
+<-deq : ∀ {m n p q} → p ≡ m → m < n → n ≡ q → p < q
+<-deq refl l refl = l
 
 <<S : ∀ n → n < S (S n)
 <<S O = O< (S O)
