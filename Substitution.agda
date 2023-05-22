@@ -1,5 +1,5 @@
-open import Base 
-open import Terms 
+open import Base
+open import Terms
 
 module Substitution where
   -- BIND: The generic substitution operator:
@@ -36,11 +36,11 @@ module Substitution where
     where lemma = λ y → ext Λ↑ (↑-func f x y )
 
   -- Interaction between bind and i (Or more generally, between bind and X → ↑ X)
-  bind↑inter : ∀ {Y Z : Set} (g : Y → Λ Z) (f : Z → ↑ Z) (p : Y → ↑ Y) (x : Λ Y) 
+  bind↑inter : ∀ {Y Z : Set} (g : Y → Λ Z) (f : Z → ↑ Z) (p : Y → ↑ Y) (x : Λ Y)
     → (Λ→ f) ∘ g ≃ (Λ↑ ∘ ↑→ g) ∘ p → Λ→ f (bind g x) ≡ bind (Λ↑ ∘ ↑→ g) (Λ→ p x)
   bind↑inter g f p (var x) prf = prf x
   bind↑inter g f p (app x x₁) prf = app≡ (bind↑inter g f p x prf) (bind↑inter g f p x₁ prf)
-  bind↑inter g f p (abs x) prf = abs≡ (bind↑inter (Λ↑ ∘ ↑→ g) (↑→ f) (↑→ p) x 
+  bind↑inter g f p (abs x) prf = abs≡ (bind↑inter (Λ↑ ∘ ↑→ g) (↑→ f) (↑→ p) x
     λ {(i x) → (~ Λ-func (↑→ f) i (g x)) ! (Λ-func i f (g x) ! ext (Λ→ i) (prf x)) ; o → refl})
 
   bind↑-dist : ∀ {X Y : Set} (g : X → Λ Y) → Λ↑ ∘ ↑→ (bind g) ≃ bind (Λ↑ ∘ ↑→ g) ∘ Λ↑
@@ -51,8 +51,8 @@ module Substitution where
            → bind (bind g ∘ f) ≃ (bind g ∘ bind f)
   bind-law f g (var x) = refl
   bind-law f g (app t₀ t₁) = app≡ (bind-law f g t₀) (bind-law f g t₁)
-  bind-law f g (abs t) = abs≡ (bind-ext 
-    (λ {(i x) → bind↑inter g i i (f x) (λ x → refl) ; o → refl}) t 
+  bind-law f g (abs t) = abs≡ (bind-ext
+    (λ {(i x) → bind↑inter g i i (f x) (λ x → refl) ; o → refl}) t
     ! bind-law (Λ↑ ∘ ↑→ f) (Λ↑ ∘ ↑→ g) t)
 
   -- μ is mu
@@ -78,3 +78,13 @@ module Substitution where
   subst→ f M N =   bind-nat1 f (io var N) M
                  ! bind-ext (io-var-nat f N) M
                  ! bind-nat2 (↑→ f) (io var (Λ→ f N)) M
+
+  mapIsBind : ∀ {X Y : Set} → (f : X → Y) → Λ→ f ≃ bind (var ∘ f)
+  mapIsBind f (var x) = refl
+  mapIsBind f (app t₀ t₁) = app≡ (mapIsBind f t₀ ) (mapIsBind f t₁)
+  mapIsBind f (abs t) = abs≡ (mapIsBind (↑→ f) t ! bind-ext (λ {(i x) → refl ; o → refl} ) t )
+
+  -- bind-unit1 : ∀ {X} → ∀ (t : Λ X) → bind var t ≡ t
+  -- bind-unit1 (var x) = refl
+  -- bind-unit1 (app t t₁) = app≡ (bind-unit1 t) (bind-unit1 t₁)
+  -- bind-unit1 (abs t) = abs≡ {! refl   !}

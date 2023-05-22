@@ -1,6 +1,6 @@
 module Numbers where
 
-open import Equality 
+open import Equality
 
 data Nat : Set where
     O : Nat
@@ -45,7 +45,7 @@ tran< .(S n₁) .(S m) .(S n) (S< n₁ .n p) (S< n m q) = S< _ _ (tran< _ _ _ p 
 <S (S n) = S< n (S n) (<S n)
 
 <S-eq : ∀ {m n : Nat} → n < S n → n ≡ m → n < S m
-<S-eq p refl = p 
+<S-eq p refl = p
 
 add<S : ∀ n m → n < (S m ++ n)
 add<S n O = <S n
@@ -66,14 +66,31 @@ data _≤_ : Nat → Nat → Set where
   O≤ : ∀ {n} → O ≤ n
   S≤ : ∀ {n m} → n ≤ m → S n ≤ S m
 
-≤-eq : ∀ {m n l : Nat} → n ≤ m → m ≡ l → n ≤ l 
+≡≤ : ∀ {k l m} → k ≡ l → l ≤ m → k ≤ m
+≡≤ refl le = le
+
+lelte : ∀ {m n l : Nat} → n < m → m ≤ l → n ≤ l
+lelte (O< n) q = O≤
+lelte (S< n m p) (S≤ q) = S≤ (lelte p q)
+
+ltele : ∀ {n m l : Nat} → n < m → m ≤ l → n < l
+ltele (O< n) (S≤ q) = O< _
+ltele (S< n m p) (S≤ q) = S< n _ (ltele p q)
+
+≤-eq : ∀ {m n l : Nat} → n ≤ m → m ≡ l → n ≤ l
 ≤-eq p refl = p
 
 ≤S : ∀ (n : Nat) → n ≤ n
 ≤S O = O≤
 ≤S (S n) = S≤ (≤S n)
 
+≤≡ : ∀ {m n : Nat} → m ≡ n → m ≤ n
+≤≡ refl = ≤S _
+
 ≤++ : ∀ {n m n' m'} → n ≤ m → n' ≤ m' → (n ++ n') ≤ (m ++ m')
 ≤++ O≤ O≤ = O≤
 ≤++ O≤ (S≤ p2) = ≤-eq (S≤ (≤++ O≤ p2)) (~ S++ _ _)
 ≤++ (S≤ p1) p2 = S≤ (≤++ p1 p2)
+
+lestrict : ∀ {m} {n} → m < n → n ≤ m → ⊥
+lestrict mn nm = <-irrefl _ (ltele mn nm )
