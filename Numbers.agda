@@ -94,3 +94,9 @@ ltele (S< n m p) (S≤ q) = S< n _ (ltele p q)
 
 lestrict : ∀ {m} {n} → m < n → n ≤ m → ⊥
 lestrict mn nm = <-irrefl _ (ltele mn nm )
+
+++≤ : ∀ {m n s} → (m ++ n) ≤ s → (n ++ m) ≤ s
+++≤ {m} {n} p = ≡≤ (comm++ n m) p
+
+++S≤ : ∀ {m n s} → S (m ++ n) ≤ s → S (n ++ m) ≤ s
+++S≤ {m} {n} (S≤ p) = S≤ (≡≤ (comm++ n m) p)  

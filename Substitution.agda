@@ -84,7 +84,8 @@ module Substitution where
   mapIsBind f (app t₀ t₁) = app≡ (mapIsBind f t₀ ) (mapIsBind f t₁)
   mapIsBind f (abs t) = abs≡ (mapIsBind (↑→ f) t ! bind-ext (λ {(i x) → refl ; o → refl} ) t )
 
-  -- bind-unit1 : ∀ {X} → ∀ (t : Λ X) → bind var t ≡ t
-  -- bind-unit1 (var x) = refl
-  -- bind-unit1 (app t t₁) = app≡ (bind-unit1 t) (bind-unit1 t₁)
-  -- bind-unit1 (abs t) = abs≡ {! refl   !}
+  bind-unit1 : ∀ {X : Set} (t : Λ X) → bind var t ≡ t 
+  bind-unit1 (var x) = refl
+  bind-unit1 (app t t₁) = app≡ (bind-unit1 t) (bind-unit1 t₁)
+  bind-unit1 {X} (abs t) = abs≡ (bind-ext (λ {(i x) → refl ; o → refl}) t ! bind-unit1 t) -- (bind-ext {! symm var-lifting   !} {! t   !})
+ 
