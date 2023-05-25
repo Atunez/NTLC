@@ -199,32 +199,23 @@ equalTermsEqualLengths (app M M₁) .(app M M₁) d refl p2 = case c1 c2 (∧-el
   c2 = λ x → equalTermsEqualLengths M₁ M₁ d refl x
 equalTermsEqualLengths (abs M) .(abs M) d refl p2 = equalTermsEqualLengths M M (dec↑ d) refl p2
 
--- -- A [ B ] == A in length if B = var.
--- lengthStaysOnVarChange : ∀ {X : Set} (M : Λ (↑ X)) (x : X) → lenTerm M ≡ lenTerm (M [ var x ])
--- lengthStaysOnVarChange (var (i x)) y = refl
--- lengthStaysOnVarChange (var o) y = refl
--- lengthStaysOnVarChange (app M M₁) y = ext S (tran++ (lengthStaysOnVarChange M y) (lengthStaysOnVarChange M₁ y))
--- lengthStaysOnVarChange (abs M) y = ext S (lengthStaysOnVarChange M (i y) ! ext lenTerm {!   !})
+equalLength : ∀ {X : Set} (M N : Λ X) → M ≡ N → ¬ (lenTerm M ≡ lenTerm N) → ⊥
+equalLength M .M refl p = p refl
 
--- improper : ∀ {X : Set} (A1 : Λ (↑ (↑ X))) (x : X) → lenTerm A1 ≡ lenTerm (bind (λ y → Λ↑ (↑→ (io var (var x)) y)) A1)
--- improper (var (i (i x₁))) x = refl
--- improper (var (i o)) x = refl
--- improper (var o) x = refl
--- improper (app A1 A2) x = ext S (tran++ (improper A1 x) (improper A2 x))
--- improper (abs A1) x = ext S (improper A1 (i x) ! {!   !})
+
 
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
-lercherEq2 (var o) A2 d B p = refl
-lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = {!   !}
-lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = {!   !}
-  -- let (lhs , rhs) = app≡inv (abs≡inv p)
-  --     c1 = λ q → {!   !}
-  --     c2 = λ q → exfalso (q (var≡inv (abs≡inv lhs)))
-  -- in case c1 c2 (dec↑ (dec↑ d) (↑→ i x) (i o))
-lercherEq2 (abs (app A1 A3)) A2 B d p = {!   !}
--- exfalso (<-irrefl (lenTerm A1) {!   !})
--- lengthStaysOnVarChange A1 (i x) !
--- ~ (ext (lenTerm) (_×_.fst (eqParts (eqAbs prf))))
+lercherEq2 (var o) A2 B d p = refl
+lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
+lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
+lercherEq2 (abs (app A1 A3)) A2 B d p with decΛ decAto A1 
+-- If o not in A, then A [ B ] = A contraction on length.
+-- Although, how do you formulate this as a lemma?
+...      | inr no = exfalso (equalLength _ _ (_×_.fst (app≡inv (abs≡inv p))) λ q → {!   !})
+...      | inl yes with occursLemma' (λ x → io (Λ→ i) (var o) (↑→ (io var B) x)) A1 o yes
+...             | inr nonvarcase = {!   !} -- Whats Going on Here?
+...             | inl refl = exfalso (equalLength _ _ (_×_.fst (app≡inv (abs≡inv p))) (λ ())) -- Contradiction on length
+
 
 -- lercherHelper : ∀ (P Q : Λ (↑ ⊥)) → P ≡ var o → Q ≡ var o → abs (app P Q) ≡ ω
 -- lercherHelper .(var o) .(var o) refl refl = refl
@@ -254,4 +245,4 @@ lercherEq2 (abs (app A1 A3)) A2 B d p = {!   !}
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
-  
+     
