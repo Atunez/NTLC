@@ -226,14 +226,28 @@ bind-lemma2 f g (abs M) neg p = abs≡ (bind-lemma2 {!   !} {!   !} {!   !} {! n
 -- liftingDoesNothing B (app A A₁) neg = ext S (tran++ (liftingDoesNothing B A _) (liftingDoesNothing B A₁ _))
 -- liftingDoesNothing B (abs A) neg = ext S ( {!   !})
 
-lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
-lercherEq2 (var o) A2 B d p = refl
-lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
-lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
-lercherEq2 (abs (app A1 A3)) A2 B d p = 
+
+
+lercherEq2' : ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var o
+lercherEq2' (var x) A2 f p with f x | p
+...                             | abs (app (var x) A1) | refl = {! x  !}
+lercherEq2' (abs (var x)) A2 f p = {!   !}
+lercherEq2' (abs (app A1 A3)) A2 f p =
   let (lhs , rhs) = app≡inv (abs≡inv p)
-      recCall = lercherEq2 A1 A3 (Λ→ i B) (dec↑ d) ({!   !} ! lhs)
-  in exfalso (nottrue _ _ _ recCall lhs)
+      e = λ {(o) → refl ; (i x) → refl }
+      q = bind-ext e A1 ! lhs
+      recCall = lercherEq2' A1 A3 (io (Λ↑ ∘ i ∘ f) (var o) ) q
+    in {!   !}
+    
+lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
+lercherEq2 A1 A2 B d p = lercherEq2' _ _ (io var B) p
+-- lercherEq2 (var o) A2 B d p = refl
+-- lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
+-- lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
+-- lercherEq2 (abs (app A1 A3)) A2 B d p = 
+--   let (lhs , rhs) = app≡inv (abs≡inv p)
+--       recCall = lercherEq2 A1 A3 (Λ→ i B) (dec↑ d) ({!   !} ! lhs)
+--   in exfalso (nottrue _ _ _ recCall lhs)
 
 --with decΛ decAto A1 
 -- -- If o not in A, then A [ B ] = A contraction on length.
@@ -272,4 +286,4 @@ lercherEq2 (abs (app A1 A3)) A2 B d p =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
-         
+           
