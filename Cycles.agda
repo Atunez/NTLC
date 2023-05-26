@@ -205,13 +205,34 @@ equalLength M .M refl p = p refl
 nottrue : ∀ {X} (A1 A2 : Λ (↑ (↑ X))) (B : Λ X) → A1 ≡ var o → bind (λ x → Λ↑ (↑→ (io var B) x)) A1 ≡ abs (app A1 A2) → ⊥
 nottrue .(var o) A2 B refl p2 = exfalso (equalLength _ _ p2 (λ ()))
 
+-- bind f M = bind g M, but the result is equal if applied to O, otherwise not?
+bind-lemma : ∀ {X Y : Set} (f g : ↑ X → Λ Y) (M : Λ (↑ X)) → (∀ x → (x ≡ o) × (f o ≡ g o) ⊔ (x ∈ M → f x ≡ g x)) → bind f M ≡ bind g M 
+bind-lemma f g (var x) p = 
+   let c1 = λ {(refl , rhs) → rhs}
+       c2 = λ z → z here
+    in case c1 c2 (p x)
+bind-lemma f g (app M M₁) p = app≡ (bind-lemma _ _ M (λ q → case _ _ (p q))) (((bind-lemma _ _ M₁ (λ q → case _ _ (p q)))))
+bind-lemma f g (abs M) p = abs≡ (bind-lemma _ _ M λ {o → inl (refl , refl) ; (i k) → inr λ q → case (λ {(refl , rhs) → ext (Λ→ i) rhs}) (λ u → ext (Λ→ i) (u (down q))) (p k)})
+
+bind-lemma2 : ∀ {X Y : Set} (f g : ↑ X → Λ Y) (M : Λ (↑ X)) → ¬ (o ∈ M) → (∀ x → x ∈ M → f x ≡ g x) → bind f M ≡ bind g M
+bind-lemma2 f g (var (i x)) neg p = p (i x) here
+bind-lemma2 f g (var o) neg p = exfalso (neg here)
+bind-lemma2 f g (app M M₁) neg p = {!   !}
+bind-lemma2 f g (abs M) neg p = abs≡ (bind-lemma2 {!   !} {!   !} {!   !} {! neg  !} {!p   !})
+
+-- liftingDoesNothing : ∀ {X Y} (f : X → Λ Y) (B : Λ X) (A : Λ (↑ X)) → ¬ (o ∈ A) → lenTerm (bind f ∘ (io var B) A) ≡ lenTerm A
+-- liftingDoesNothing B (var (i x)) neg = refl
+-- liftingDoesNothing B (var o) neg = exfalso (neg here)
+-- liftingDoesNothing B (app A A₁) neg = ext S (tran++ (liftingDoesNothing B A _) (liftingDoesNothing B A₁ _))
+-- liftingDoesNothing B (abs A) neg = ext S ( {!   !})
+
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
 lercherEq2 (var o) A2 B d p = refl
 lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
 lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
 lercherEq2 (abs (app A1 A3)) A2 B d p = 
   let (lhs , rhs) = app≡inv (abs≡inv p)
-      recCall = lercherEq2 A1 A3 (Λ→ i B) (dec↑ d) {!   !}
+      recCall = lercherEq2 A1 A3 (Λ→ i B) (dec↑ d) ({!   !} ! lhs)
   in exfalso (nottrue _ _ _ recCall lhs)
 
 --with decΛ decAto A1 
@@ -251,4 +272,4 @@ lercherEq2 (abs (app A1 A3)) A2 B d p =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
-      
+         
