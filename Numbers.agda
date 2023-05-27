@@ -100,3 +100,6 @@ lestrict mn nm = <-irrefl _ (ltele mn nm )
 
 ++S≤ : ∀ {m n s} → S (m ++ n) ≤ s → S (n ++ m) ≤ s
 ++S≤ {m} {n} (S≤ p) = S≤ (≡≤ (comm++ n m) p)  
+
+numbersDontAdd : ∀ {m n} → m ≡ n → m ≡ S (S n) → ⊥
+numbersDontAdd refl ()

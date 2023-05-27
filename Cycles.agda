@@ -280,13 +280,21 @@ lercherEq2 (abs (app A1 A3)) A2 B d p =
 -- ...             | inl refl = exfalso (equalLength _ _ (_×_.fst (app≡inv (abs≡inv p))) (λ ())) -- Contradiction on length
 -- --    → bind (bind g ∘ f) ≃ (bind g ∘ bind f)
 
--- lercherHelper : ∀ (P Q : Λ (↑ ⊥)) → P ≡ var o → Q ≡ var o → abs (app P Q) ≡ ω
--- lercherHelper .(var o) .(var o) refl refl = refl
 
--- lercher : ∀ (P : Λ (↑ ⊥)) (Q : Λ ⊥) → P [ Q ] ≡ app (abs P) Q → abs P ≡ ω × Q ≡ ω
--- lercher (var (i x)) q prf = exfalso x
--- lercher (var o) q prf = exfalso (<-irrefl lt (<-eq (<<S lt) (ext (lenTerm) (~ prf)))) where lt = lenTerm q
--- lercher (app P l) Q prf = {!   !}
+lercherHelper : ∀ (P1 P2 : Λ (↑ ⊥)) (Q : Λ ⊥) → P1 ≡ var o → P2 ≡ var o ⊔ P2 ≡ Λ→ i Q → (app P1 P2) [ Q ] ≡ app (abs (app P1 P2)) Q → abs (app P1 P2) ≡ ω × Q ≡ ω 
+lercherHelper .(var o) .(var o) Q refl (inl refl) p3 = refl , _×_.fst (app≡inv p3)
+lercherHelper .(var o) .(Λ→ i Q) Q refl (inr refl) p3 = 
+  let qPrf = _×_.fst (app≡inv p3)
+  in exfalso (equalLength _ _ qPrf (λ q → numbersDontAdd (mapKeepsLength i Q) q))
+
+lercher : ∀ (P : Λ (↑ ⊥)) (Q : Λ ⊥) → P [ Q ] ≡ app (abs P) Q → abs P ≡ ω × Q ≡ ω
+lercher (var (i x)) q prf = exfalso x
+lercher (var o) q prf = exfalso (<-irrefl lt (<-eq (<<S lt) (ext (lenTerm) (~ prf)))) where lt = lenTerm q
+lercher (app P1 P2) Q prf = 
+   let (lhs , rhs) = app≡inv prf
+       l1 = lercherEq2 _ _ _ dec⊥ lhs 
+       l2 = lercherEq3 Q P2 rhs 
+   in lercherHelper _ _ _ l1 l2 prf
 
 
 -- module CycleStuff where
