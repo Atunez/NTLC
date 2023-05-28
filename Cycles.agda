@@ -248,8 +248,7 @@ occursLemmaAbs' : ∀ {X} (A1 : Λ (↑ X)) (A2 : Λ (↑ (↑ X))) → A1 ≡ a
 -- occursLemmaAbs' : ∀ {X Y} (A1 : Λ (↑ X)) (A2 : Λ (↑ Y)) (f : ↑ X → Λ Y) → bind f A1 ≡ abs (app (Λ→ ()) A1) A2) → ⊥
 occursLemmaAbs' (abs (app A1 A3)) A2 p =
   let (lhs , rhs) = app≡inv (abs≡inv p)
-      q = λ e → {!   !}
-   in equalLength _ _ lhs q
+   in equalLength _ _ lhs λ q → (numbersDontAdd2 _ _ _ (mapKeepsLength (↑→ (↑→ i)) A1) q)
 
 -- lercherEq2lemma : ∀ {X} {x} (A1 : Λ (↑ X)) A2 (f : ↑ X → Λ (↑ X))→ x ∈ A1 → bind f A1  ≡ abs (app (Λ→ (↑→ i) A1) A2) → A1 ≡ var x
 -- lercherEq2lemma .(var _) A2 f here p = refl
@@ -316,3 +315,4 @@ lercher (app P1 P2) Q prf =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
+ 

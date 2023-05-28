@@ -103,3 +103,10 @@ lestrict mn nm = <-irrefl _ (ltele mn nm )
 
 numbersDontAdd : ∀ {m n} → m ≡ n → m ≡ S (S n) → ⊥
 numbersDontAdd refl ()
+
+lemmaNum : ∀ (m q : Nat) → m < S (S (m ++ q))
+lemmaNum O q = O< (S q)
+lemmaNum (S m) q = S< m (S (S (m ++ q))) (lemmaNum m q)
+
+numbersDontAdd2 : ∀ (m n q : Nat) → m ≡ n → m ≡ S (S (n ++ q)) → ⊥
+numbersDontAdd2 m n q refl o = lestrict (lemmaNum _ _) (≤≡ (~ o))
