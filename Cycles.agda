@@ -279,6 +279,29 @@ lercherEq2 (abs (app A1 A3)) A2 B d p =
 -- ...             | inl refl = exfalso (equalLength _ _ (_×_.fst (app≡inv (abs≡inv p))) (λ ())) -- Contradiction on length
 -- --    → bind (bind g ∘ f) ≃ (bind g ∘ bind f)
 
+-- occursLemmaAbs' : ∀ {X} (A1 : Λ (↑ X)) (A2 : Λ (↑ (↑ X))) → A1 ≡ abs (app (Λ→ (↑→ i) A1) A2) → ⊥
+-- -- occursLemmaAbs' : ∀ {X Y} (A1 : Λ (↑ X)) (A2 : Λ (↑ Y)) (f : ↑ X → Λ Y) → bind f A1 ≡ abs (app (Λ↑ ∘ ↑→ f) A1) A2) → ⊥
+-- -- occursLemmaAbs' : ∀ {X Y} (A1 : Λ (↑ X)) (A2 : Λ (↑ Y)) (f : ↑ X → Λ Y) → bind f A1 ≡ abs (app (Λ→ ()) A1) A2) → ⊥
+-- occursLemmaAbs' (abs (app A1 A3)) A2 p =
+--   let (lhs , rhs) = app≡inv (abs≡inv p)
+--    in equalLength _ _ lhs λ q → (numbersDontAdd2 _ _ _ (mapKeepsLength (↑→ (↑→ i)) A1) q)
+
+implications : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) (f : (↑ X) → Λ X) → dec X → bind f A1 ≡ abs (app A1 A2) → A1 ≡ abs (app (Λ→ (↑→ i) A1) (Λ→ i A2))
+implications (var x) A2 B f d p1 with f x
+...                             | var y = exfalso (equalLength _ _ p1 (λ ()))
+...                             | app M N  = exfalso (equalTermsEqualLengths _ _ d p1 refl)
+...                             | abs M = exfalso {!   !}
+implications (abs (var (i x))) A2 B f d p1 with f x
+...                             | var y = exfalso (equalLength _ _ p1 (λ ()))
+...                             | app M N  = {!   !}
+...                             | abs M = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (abs≡inv p1) refl)
+implications (abs (app A1 A3)) A2 B f d p1 = 
+  let (lhs , rhs) = app≡inv (abs≡inv p1)
+      r1 = implications A1 A3 ((Λ→ i B)) _ (dec↑ d) lhs
+  in exfalso (equalLength _ _ r1 (λ q → numbersDontAdd2 _ _ _ (mapKeepsLength _ A1) q))
+
+lercherEq2⊥ : ∀ (A1 A2 : Λ (↑ ⊥)) (B : Λ ⊥) → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
+lercherEq2⊥ A1 A2 B p1 = exfalso (occursLemmaAbs' A1 (Λ→ i A2) (implications A1 A2 B (io var B) dec⊥ p1))
 
 lercherHelper : ∀ (P1 P2 : Λ (↑ ⊥)) (Q : Λ ⊥) → P1 ≡ var o → P2 ≡ var o ⊔ P2 ≡ Λ→ i Q → (app P1 P2) [ Q ] ≡ app (abs (app P1 P2)) Q → abs (app P1 P2) ≡ ω × Q ≡ ω 
 lercherHelper .(var o) .(var o) Q refl (inl refl) p3 = refl , _×_.fst (app≡inv p3)
@@ -315,4 +338,4 @@ lercher (app P1 P2) Q prf =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
- 
+  
