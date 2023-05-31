@@ -1,4 +1,4 @@
-module Cycles where
+module Cycles2 where
 
 open import Lambda public
 
@@ -45,6 +45,9 @@ dec↑ p o o = inl refl
 
 decAt : ∀ (X : Set) → X → Set
 decAt X x = ∀ y → x ≡ y ⊔ ¬ (x ≡ y)
+
+dec2decAt : ∀ {X} → dec X → (x : X) → decAt X x
+dec2decAt d x y = d x y
 
 decAto : ∀ {X} → decAt (↑ X) o
 decAto (i x) = inr (λ {()})
@@ -256,17 +259,77 @@ occursLemmaAbs' (abs (app A1 A3)) A2 p =
 -- lercherEq2lemma .(abs (app _ t)) A2 f (down (left occ t)) p = {!   !}
 -- lercherEq2lemma .(abs (app s _)) A2 f (down (right s occ)) p = {!   !}
 
+-- absOccursLemma :  ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → o ∈ A1 → A1 ≡ var o
+-- absOccursLemma .(var o) A2 B d p here = refl
+-- absOccursLemma .(abs _) A2 B d p (down occ) with abs≡inv p
+-- ...                                            | q = {!   !}
+
+absOccursLemma :  ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) (x : ↑ X) → dec X → bind f A1 ≡ abs (app A1 A2) → x ∈ A1  → A1 ≡ var x ⊔ A1 ≡ abs (var (i x))
+-- absOccursLemma .(var x) A2 f x d p here = inl refl
+-- absOccursLemma (abs (var .(i x))) A2 f x d p (down here) = inr refl
+-- absOccursLemma (abs (app r₁ r₂)) A2 f (i x) d p (down occ) = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f o d p (down occ) = {!   !}
+absOccursLemma .(var x) A2 f x d p here = inl refl
+absOccursLemma (abs (var .(i x))) A2 f x d p (down here) = inr refl
+absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (left occ r₂)) with app≡inv (abs≡inv p)
+...    | (p1 , p2) with absOccursLemma r₁ r₂ _ (i x) (dec↑ d) p1 occ
+... | inl lft = {!   !}
+... | inr rgt = {!   !}
+absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (right r₁ occ)) = {!   !}
+
+-- with decΛ (dec↑ (dec↑ d) (i x)) r₁
+-- ... | inl yes with app≡inv (abs≡inv p)
+-- ...    | p2  = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (left occ .r₂)) | inr no = exfalso (no occ)
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (right .r₁ occ)) | inr no = {!   !}
+
+-- ... | inl yes = ?
+-- ... ∣ inr no  = ?
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down occ) with app≡inv (abs≡inv p)
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (left occ .r₂)) | lhs , rhs with absOccursLemma r₁ r₂ _ (i x) (dec↑ d) lhs occ
+-- -- ... | q = {! bind (λ x₁ → io (Λ→ i) (var o) (↑→ f x₁)) (var (i x ))  !}
+-- ... | q = {! bind (λ x₁ → io (Λ→ i) (var o) (↑→ f x₁)) (abs (var (i (i x ))))  !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (right .r₁ occ)) | lhs , rhs = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f (i x) d p (down (left occ .r₂)) | lhs , rhs | inl r1var = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f o d p (down (left occ .r₂)) | lhs , rhs | inl r1var = {!   !}
+-- ... | inr r1abs with abs≡inv (ext (bind (λ x₁ → io (Λ→ i) (var o) (↑→ f x₁))) (~ r1abs) ! lhs )
+-- absOccursLemma (abs (app r₁ r₂)) A2 f (i x) d p (down (left occ .r₂)) | lhs , rhs | inr r1abs | q = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f o d p (down (left occ .r₂)) | lhs , rhs | inr r1abs | q = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (right .r₁ occ)) | lhs , rhs = {!   !}
+
+bindLemma1 : ∀ {X} (t : Λ X) (f : X → Λ X) → (∀ (x : X) → x ∈ t → f x ≡ var x) → bind f t ≡ t
+bindLemma1 (var x) f h = h x here
+bindLemma1 (app t t₁) f h = app≡ (bindLemma1 t f λ x oc → h x (left oc t₁ ) ) (bindLemma1 t₁ f λ x oc → h x (right t oc) )
+bindLemma1 (abs t) f h = abs≡ (bindLemma1 t (Λ↑ ∘ ↑→ f) λ { o → λ y → refl ; (i x) → λ y → ext (Λ→ i) (h x (down y)) } )
+
+lercherHelp : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → o ∈ A1 → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
+
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
 -- lercherEq2 A1 A2 B d p -- = lercherEq2' _ _ (io var B) p
 lercherEq2 (var o) A2 B d p = refl
 lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
 lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
-lercherEq2 (abs (app A1 A3)) A2 B d p =
+-- lercherEq2 (abs (app A1 A3)) A2 B d p with decΛ (decAti o decAto) A1
+-- ... | inl here =
+--   let (lhs , rhs) = app≡inv (abs≡inv p)
+--    in {!   !}
+-- ... | inl (down yes) = {!   !}
+-- ...                                         | inr no  = {!   !}
+lercherEq2 {X} (abs (app A1 A3)) A2 B d p =
   let (lhs , rhs) = app≡inv (abs≡inv p)
+      f : ↑ (↑ X) → Λ (↑ X)
+      f = (Λ↑ ∘ ↑→ (io var B))
+      g : ↑ (↑ X) → Λ (↑ X)
+      g = λ {(o) → var o ; (i o) → Λ→ i B ; (i (i x)) → var (i x) }
+      f≃g : f ≃ g
+      f≃g = λ {(o) → refl ; (i (i x)) → refl ; (i o) → refl }
+      aux : i o ∈ A1 ⊔ ¬ (i o ∈ A1) → ⊥
+      aux = (λ { (inl yes) → {!   !} ;
+                  (inr no) → {!   !} })
       -- r = {! occurs  !}
       -- e = bind-ext  (λ {(o) → {!   !} ; (i x) → {!   !} }) A1
       -- recCall = lercherEq2 A1 A3 (io (Λ↑ ∘ i) (Λ→ i B) o ) (dec↑ d) (e  ! lhs)
-  in {!   !}
+  in exfalso (aux (decΛ (decAti o (decAto)) A1))
 
 --   with decΛ decAto A1
 -- -- If o not in A, then A [ B ] = A contraction on length.
