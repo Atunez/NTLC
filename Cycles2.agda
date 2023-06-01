@@ -264,18 +264,18 @@ occursLemmaAbs' (abs (app A1 A3)) A2 p =
 -- absOccursLemma .(abs _) A2 B d p (down occ) with abs≡inv p
 -- ...                                            | q = {!   !}
 
-absOccursLemma :  ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) (x : ↑ X) → dec X → bind f A1 ≡ abs (app A1 A2) → x ∈ A1  → A1 ≡ var x ⊔ A1 ≡ abs (var (i x))
+-- absOccursLemma :  ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) (x : ↑ X) → dec X → bind f A1 ≡ abs (app A1 A2) → x ∈ A1  → A1 ≡ var x ⊔ A1 ≡ abs (var (i x))
+-- -- absOccursLemma .(var x) A2 f x d p here = inl refl
+-- -- absOccursLemma (abs (var .(i x))) A2 f x d p (down here) = inr refl
+-- -- absOccursLemma (abs (app r₁ r₂)) A2 f (i x) d p (down occ) = {!   !}
+-- -- absOccursLemma (abs (app r₁ r₂)) A2 f o d p (down occ) = {!   !}
 -- absOccursLemma .(var x) A2 f x d p here = inl refl
 -- absOccursLemma (abs (var .(i x))) A2 f x d p (down here) = inr refl
--- absOccursLemma (abs (app r₁ r₂)) A2 f (i x) d p (down occ) = {!   !}
--- absOccursLemma (abs (app r₁ r₂)) A2 f o d p (down occ) = {!   !}
-absOccursLemma .(var x) A2 f x d p here = inl refl
-absOccursLemma (abs (var .(i x))) A2 f x d p (down here) = inr refl
-absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (left occ r₂)) with app≡inv (abs≡inv p)
-...    | (p1 , p2) with absOccursLemma r₁ r₂ _ (i x) (dec↑ d) p1 occ
-... | inl lft = {!   !}
-... | inr rgt = {!   !}
-absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (right r₁ occ)) = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (left occ r₂)) with app≡inv (abs≡inv p)
+-- ...    | (p1 , p2) with absOccursLemma r₁ r₂ _ (i x) (dec↑ d) p1 occ
+-- ... | inl lft = {!   !}
+-- ... | inr rgt = {!   !}
+-- absOccursLemma (abs (app r₁ r₂)) A2 f x d p (down (right r₁ occ)) = {!   !}
 
 -- with decΛ (dec↑ (dec↑ d) (i x)) r₁
 -- ... | inl yes with app≡inv (abs≡inv p)
@@ -302,7 +302,18 @@ bindLemma1 (var x) f h = h x here
 bindLemma1 (app t t₁) f h = app≡ (bindLemma1 t f λ x oc → h x (left oc t₁ ) ) (bindLemma1 t₁ f λ x oc → h x (right t oc) )
 bindLemma1 (abs t) f h = abs≡ (bindLemma1 t (Λ↑ ∘ ↑→ f) λ { o → λ y → refl ; (i x) → λ y → ext (Λ→ i) (h x (down y)) } )
 
-lercherHelp : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → o ∈ A1 → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
+mapKeepTermLength : ∀ {X Y : Set} (M : Λ X) {N : Nat} (f : X → Y) → lenTerm M ≡ N → lenTerm (Λ→ f M) ≡ N
+mapKeepTermLength (var x) f p = p
+mapKeepTermLength (app M M₁) f refl = ext S (tran++ (~ (mapKeepsLength f M)) (~ (mapKeepsLength f M₁)))
+mapKeepTermLength (abs M) f refl = ext S (~ (mapKeepsLength _ _)) 
+
+lercherEq2No : ∀ {X} (A1 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → dec X → ¬ (x ∈ A1) → (∀ z → z ∈ A1 → z ≡ x ⊔ lenTerm (f z) ≡ O)  → lenTerm (bind f A1) ≡ lenTerm A1
+lercherEq2No (var y) B f x d nocc p = case (λ {refl → exfalso (nocc here)}) id (p y here)
+lercherEq2No (app A1 A2) B f x d nocc p = 
+   let r1 = lercherEq2No A1 B f x d (λ z → nocc (left z A2)) λ z z₁ → p z (left z₁ A2)
+       r2 = lercherEq2No A2 B f x d (λ x₁ → nocc (right A1 x₁)) λ z z₁ → p z (right A1 z₁)
+    in ext S (tran++ r1 r2)
+lercherEq2No (abs A1) B f x d nocc p = ext S (lercherEq2No A1 (f x) _ (i x) (dec↑ d) (λ q → nocc (down q)) λ {o → _; (i o) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f o) i q)) (p o (down q)); (i (i o)) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i o)) i q)) (p (i o) (down q)) ; (i (i (i x))) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i (i x))) i q)) (p (i (i x)) (down q))})
 
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
 -- lercherEq2 A1 A2 B d p -- = lercherEq2' _ _ (io var B) p
@@ -324,8 +335,11 @@ lercherEq2 {X} (abs (app A1 A3)) A2 B d p =
       f≃g : f ≃ g
       f≃g = λ {(o) → refl ; (i (i x)) → refl ; (i o) → refl }
       aux : i o ∈ A1 ⊔ ¬ (i o ∈ A1) → ⊥
-      aux = (λ { (inl yes) → {!   !} ;
-                  (inr no) → {!   !} })
+      aux = (λ { (inl yes) → {!  down yes !} ;
+                  (inr no) → let 
+                  c1 = lercherEq2No A1 B f (i o) d no ((λ { o → λ _ → inr refl ; (i o) → λ _ → inl refl ; (i (i x)) → λ _ → inr refl }))
+                  c2 = ext lenTerm lhs
+                  in numbersDontAdd2 _ _ _ refl ((~ c1) ! c2) })
       -- r = {! occurs  !}
       -- e = bind-ext  (λ {(o) → {!   !} ; (i x) → {!   !} }) A1
       -- recCall = lercherEq2 A1 A3 (io (Λ↑ ∘ i) (Λ→ i B) o ) (dec↑ d) (e  ! lhs)
@@ -401,3 +415,4 @@ lercher (app P1 P2) Q prf =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
+  
