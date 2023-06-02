@@ -315,6 +315,16 @@ lercherEq2No (app A1 A2) B f x d nocc p =
     in ext S (tran++ r1 r2)
 lercherEq2No (abs A1) B f x d nocc p = ext S (lercherEq2No A1 (f x) _ (i x) (dec↑ d) (λ q → nocc (down q)) λ {o → _; (i o) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f o) i q)) (p o (down q)); (i (i o)) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i o)) i q)) (p (i o) (down q)) ; (i (i (i x))) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i (i x))) i q)) (p (i (i x)) (down q))})
 
+breakBool : ∀ {X} → (b : Bool) → b ≡ True ⊔ b ≡ False
+breakBool True = inl refl
+breakBool False = inr refl
+
+notEqEquals : ∀ {X} (M N : Λ X) (d : dec X) → M ≡ N → equalityOfTerms M N d ≡ False → ⊥
+notEqEquals (var x) .(var x) d refl p2 with d x x
+... | inr x₁ = x₁ refl
+notEqEquals (app M M₁) .(app M M₁) d refl p2 = case (λ q → notEqEquals M M d refl q) (λ q → notEqEquals M₁ M₁ d refl q) (∧-elim (equalityOfTerms M M d) (equalityOfTerms M₁ M₁ d) p2)
+notEqEquals (abs M) .(abs M) d refl p2 = notEqEquals M M (dec↑ d) refl p2
+
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
 -- lercherEq2 A1 A2 B d p -- = lercherEq2' _ _ (io var B) p
 lercherEq2 (var o) A2 B d p = refl
@@ -335,7 +345,10 @@ lercherEq2 {X} (abs (app A1 A3)) A2 B d p =
       f≃g : f ≃ g
       f≃g = λ {(o) → refl ; (i (i x)) → refl ; (i o) → refl }
       aux : i o ∈ A1 ⊔ ¬ (i o ∈ A1) → ⊥
-      aux = (λ { (inl yes) → {!  down yes !} ;
+      aux = (λ { (inl yes) → let 
+                  c1 = λ q → {!   !}
+                  c2 = λ q → notEqEquals _ _ (dec↑ d) lhs q
+                  in case c1 c2 (breakBool (equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d))) ;
                   (inr no) → let 
                   c1 = lercherEq2No A1 B f (i o) d no ((λ { o → λ _ → inr refl ; (i o) → λ _ → inl refl ; (i (i x)) → λ _ → inr refl }))
                   c2 = ext lenTerm lhs
