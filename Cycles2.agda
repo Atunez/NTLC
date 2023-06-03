@@ -307,6 +307,8 @@ mapKeepTermLength (var x) f p = p
 mapKeepTermLength (app M M₁) f refl = ext S (tran++ (~ (mapKeepsLength f M)) (~ (mapKeepsLength f M₁)))
 mapKeepTermLength (abs M) f refl = ext S (~ (mapKeepsLength _ _)) 
 
+
+
 lercherEq2No : ∀ {X} (A1 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → dec X → ¬ (x ∈ A1) → (∀ z → z ∈ A1 → z ≡ x ⊔ lenTerm (f z) ≡ O)  → lenTerm (bind f A1) ≡ lenTerm A1
 lercherEq2No (var y) B f x d nocc p = case (λ {refl → exfalso (nocc here)}) id (p y here)
 lercherEq2No (app A1 A2) B f x d nocc p = 
@@ -315,7 +317,38 @@ lercherEq2No (app A1 A2) B f x d nocc p =
     in ext S (tran++ r1 r2)
 lercherEq2No (abs A1) B f x d nocc p = ext S (lercherEq2No A1 (f x) _ (i x) (dec↑ d) (λ q → nocc (down q)) λ {o → _; (i o) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f o) i q)) (p o (down q)); (i (i o)) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i o)) i q)) (p (i o) (down q)) ; (i (i (i x))) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i (i x))) i q)) (p (i (i x)) (down q))})
 
-breakBool : ∀ {X} → (b : Bool) → b ≡ True ⊔ b ≡ False
+case_of_ : ∀ {a b} {A : Set a} {B : Set b} → A → (A → B) → B
+case x of f = f x
+
+-- lercherEq2Yes : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → (d : dec X) → x ∈ A1 → (∀ z → z ∈ A1 → z ≡ x × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ x) × Λ→ i (f z) ≡ var z) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
+-- lercherEq2Yes (var (i (i x))) A3 B f .(i (i x)) d here fn p with f (i (i x))
+-- ... | abs (app M N) = case {!   !} {!   !} (fn (i (i x)) here)
+-- lercherEq2Yes (var (i o)) A3 B f .(i o) d here fn p = {!   !}
+-- lercherEq2Yes (var o) A3 B f .o d here fn p = {!   !}
+-- -- with f x
+-- -- ... | abs (app M M₁) = case (λ {(lhs , rhs) → {!   !}}) (λ {(lhs , rhs) → lhs refl}) (fn x here)
+-- lercherEq2Yes (abs r) A3 B f x d (down occ) fn p = {!   !}
+
+
+--- NEED TO REWORD THESE LEMMAS.
+≡fromEquality : ∀ {X : Set} (M N : Λ X) (d : dec X) → equalityOfTerms M N d ≡ True → M ≡ N
+≡fromEquality (var x) (var y) d p = case {!   !} {!   !} (d x y)
+≡fromEquality (app M M₁) (app N N₁) d p = app≡ {!   !} {!   !}
+≡fromEquality (abs M) (abs N) d p = abs≡ (≡fromEquality M N (dec↑ d) p) 
+
+-- Given two terms, that are equal, then if there is a term in M but not N, then an issue happened...
+oNotIn : ∀ {X : Set} (M : Λ X) (N : Λ (↑ X)) → Λ→ i M ≡ N → o ∈ N → ⊥
+oNotIn M N p occ = {!   !}
+
+lercherEq2Yesio : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) → (d : dec X) → (i o) ∈ A1 → (∀ z → z ∈ A1 → z ≡ (i o) × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ (i o)) × (Λ→ i (f o) ≡ var (i o) ⊔ Λ→ i (f z) ≡ var z)) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
+lercherEq2Yesio (var (i o)) A3 B f d here fn p = 
+ let FB = ≡fromEquality (f (i o)) _ (dec↑ d) p
+     c1 = λ {(lhs , rhs) → oNotIn _ _ ((~ rhs) ! FB) (down (left here A3))}
+ in case c1 (λ z → _×_.fst z refl) (fn (i o) here)
+-- Incorrect Generalization?
+lercherEq2Yesio (abs r) A3 B f d (down occ) fn p = case (λ {(refl , rhs) → {!   !}}) (λ z → _×_.fst z refl) (fn (i o) (down occ))
+
+breakBool : ∀ (b : Bool) → b ≡ True ⊔ b ≡ False
 breakBool True = inl refl
 breakBool False = inr refl
 
@@ -346,7 +379,7 @@ lercherEq2 {X} (abs (app A1 A3)) A2 B d p =
       f≃g = λ {(o) → refl ; (i (i x)) → refl ; (i o) → refl }
       aux : i o ∈ A1 ⊔ ¬ (i o ∈ A1) → ⊥
       aux = (λ { (inl yes) → let 
-                  c1 = λ q → {!   !}
+                  c1 = λ q → lercherEq2Yesio A1 A3 B _ d yes (λ {o → λ q → inr (((λ ()) , inl refl)) ; (i o) → λ _ → inl (refl , refl) ; (i (i x)) → λ _ → inr ((λ ()) , inr refl)}) q
                   c2 = λ q → notEqEquals _ _ (dec↑ d) lhs q
                   in case c1 c2 (breakBool (equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d))) ;
                   (inr no) → let 
