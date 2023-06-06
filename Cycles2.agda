@@ -320,14 +320,14 @@ lercherEq2No (abs A1) B f x d nocc p = ext S (lercherEq2No A1 (f x) _ (i x) (dec
 case_of_ : ∀ {a b} {A : Set a} {B : Set b} → A → (A → B) → B
 case x of f = f x
 
--- lercherEq2Yes : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → (d : dec X) → x ∈ A1 → (∀ z → z ∈ A1 → z ≡ x × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ x) × Λ→ i (f z) ≡ var z) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
--- lercherEq2Yes (var (i (i x))) A3 B f .(i (i x)) d here fn p with f (i (i x))
--- ... | abs (app M N) = case {!   !} {!   !} (fn (i (i x)) here)
--- lercherEq2Yes (var (i o)) A3 B f .(i o) d here fn p = {!   !}
--- lercherEq2Yes (var o) A3 B f .o d here fn p = {!   !}
--- -- with f x
--- -- ... | abs (app M M₁) = case (λ {(lhs , rhs) → {!   !}}) (λ {(lhs , rhs) → lhs refl}) (fn x here)
--- lercherEq2Yes (abs r) A3 B f x d (down occ) fn p = {!   !}
+lercherEq2Yes : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → (d : dec X) → x ∈ A1 → (∀ z → z ∈ A1 → z ≡ x × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ x) × Λ→ i (f z) ≡ var z) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
+lercherEq2Yes (var (i (i x))) A3 B f .(i (i x)) d here fn p with f (i (i x))
+... | abs (app M N) = case {!   !} {!   !} (fn (i (i x)) here)
+lercherEq2Yes (var (i o)) A3 B f .(i o) d here fn p = {!   !}
+lercherEq2Yes (var o) A3 B f .o d here fn p = {!   !}
+-- with f x
+-- ... | abs (app M M₁) = case (λ {(lhs , rhs) → {!   !}}) (λ {(lhs , rhs) → lhs refl}) (fn x here)
+lercherEq2Yes (abs r) A3 B f x d (down occ) fn p = {!   !}
 
 
 --- NEED TO REWORD THESE LEMMAS.
@@ -346,7 +346,9 @@ lercherEq2Yesio (var (i o)) A3 B f d here fn p =
      c1 = λ {(lhs , rhs) → oNotIn _ _ ((~ rhs) ! FB) (down (left here A3))}
  in case c1 (λ z → _×_.fst z refl) (fn (i o) here)
 -- Incorrect Generalization?
-lercherEq2Yesio (abs r) A3 B f d (down occ) fn p = case (λ {(refl , rhs) → {!   !}}) (λ z → _×_.fst z refl) (fn (i o) (down occ))
+lercherEq2Yesio (abs r) A3 B f d (down occ) fn p = 
+ let FB = ≡fromEquality (bind (Λ↑ ∘ ↑→ f) r) (app (abs r) A3) (dec↑ (dec↑ d)) p
+ in case (λ {(refl , rhs) → {!   !}}) (λ z → _×_.fst z refl) (fn (i o) (down occ))
 
 breakBool : ∀ (b : Bool) → b ≡ True ⊔ b ≡ False
 breakBool True = inl refl
@@ -461,4 +463,4 @@ lercher (app P1 P2) Q prf =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
-  
+   
