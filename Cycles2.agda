@@ -309,100 +309,178 @@ mapKeepTermLength (abs M) f refl = ext S (~ (mapKeepsLength _ _))
 
 
 
-lercherEq2No : ∀ {X} (A1 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → dec X → ¬ (x ∈ A1) → (∀ z → z ∈ A1 → z ≡ x ⊔ lenTerm (f z) ≡ O)  → lenTerm (bind f A1) ≡ lenTerm A1
-lercherEq2No (var y) B f x d nocc p = case (λ {refl → exfalso (nocc here)}) id (p y here)
-lercherEq2No (app A1 A2) B f x d nocc p =
-   let r1 = lercherEq2No A1 B f x d (λ z → nocc (left z A2)) λ z z₁ → p z (left z₁ A2)
-       r2 = lercherEq2No A2 B f x d (λ x₁ → nocc (right A1 x₁)) λ z z₁ → p z (right A1 z₁)
-    in ext S (tran++ r1 r2)
-lercherEq2No (abs A1) B f x d nocc p = ext S (lercherEq2No A1 (f x) _ (i x) (dec↑ d) (λ q → nocc (down q)) λ {o → _; (i o) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f o) i q)) (p o (down q)); (i (i o)) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i o)) i q)) (p (i o) (down q)) ; (i (i (i x))) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i (i x))) i q)) (p (i (i x)) (down q))})
+-- lercherEq2No : ∀ {X} (A1 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → dec X → ¬ (x ∈ A1) → (∀ z → z ∈ A1 → z ≡ x ⊔ lenTerm (f z) ≡ O)  → lenTerm (bind f A1) ≡ lenTerm A1
+-- lercherEq2No (var y) B f x d nocc p = case (λ {refl → exfalso (nocc here)}) id (p y here)
+-- lercherEq2No (app A1 A2) B f x d nocc p =
+--    let r1 = lercherEq2No A1 B f x d (λ z → nocc (left z A2)) λ z z₁ → p z (left z₁ A2)
+--        r2 = lercherEq2No A2 B f x d (λ x₁ → nocc (right A1 x₁)) λ z z₁ → p z (right A1 z₁)
+--     in ext S (tran++ r1 r2)
+-- lercherEq2No (abs A1) B f x d nocc p = ext S (lercherEq2No A1 (f x) _ (i x) (dec↑ d) (λ q → nocc (down q)) λ {o → _; (i o) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f o) i q)) (p o (down q)); (i (i o)) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i o)) i q)) (p (i o) (down q)) ; (i (i (i x))) → λ q → case (λ {refl → inl refl}) (λ q → inr (mapKeepTermLength (f (i (i x))) i q)) (p (i (i x)) (down q))})
 
-case_of_ : ∀ {a b} {A : Set a} {B : Set b} → A → (A → B) → B
-case x of f = f x
+-- case_of_ : ∀ {a b} {A : Set a} {B : Set b} → A → (A → B) → B
+-- case x of f = f x
 
-lercherEq2Yes : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → (d : dec X) → x ∈ A1 → (∀ z → z ∈ A1 → z ≡ x × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ x) × Λ→ i (f z) ≡ var z) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
-lercherEq2Yes (var (i (i x))) A3 B f .(i (i x)) d here fn p with f (i (i x))
-... | abs (app M N) = case {!   !} {!   !} (fn (i (i x)) here)
-lercherEq2Yes (var (i o)) A3 B f .(i o) d here fn p = {!   !}
-lercherEq2Yes (var o) A3 B f .o d here fn p = {!   !}
--- with f x
--- ... | abs (app M M₁) = case (λ {(lhs , rhs) → {!   !}}) (λ {(lhs , rhs) → lhs refl}) (fn x here)
-lercherEq2Yes (abs r) A3 B f x d (down occ) fn p = {!   !}
+-- lercherEq2Yes : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ (↑ X)) → (d : dec X) → x ∈ A1 → (∀ z → z ∈ A1 → z ≡ x × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ x) × Λ→ i (f z) ≡ var z) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
+-- lercherEq2Yes (var (i (i x))) A3 B f .(i (i x)) d here fn p with f (i (i x))
+-- ... | abs (app M N) = case {!   !} {!   !} (fn (i (i x)) here)
+-- lercherEq2Yes (var (i o)) A3 B f .(i o) d here fn p = {!   !}
+-- lercherEq2Yes (var o) A3 B f .o d here fn p = {!   !}
+-- -- with f x
+-- -- ... | abs (app M M₁) = case (λ {(lhs , rhs) → {!   !}}) (λ {(lhs , rhs) → lhs refl}) (fn x here)
+-- lercherEq2Yes (abs r) A3 B f x d (down occ) fn p = {!   !}
 
 
---- NEED TO REWORD THESE LEMMAS.
-≡fromEquality : ∀ {X : Set} (M N : Λ X) (d : dec X) → equalityOfTerms M N d ≡ True → M ≡ N
-≡fromEquality (var x) (var y) d p = case {!   !} {!   !} (d x y)
-≡fromEquality (app M M₁) (app N N₁) d p = app≡ {!   !} {!   !}
-≡fromEquality (abs M) (abs N) d p = abs≡ (≡fromEquality M N (dec↑ d) p)
+-- --- NEED TO REWORD THESE LEMMAS.
+-- ≡fromEquality : ∀ {X : Set} (M N : Λ X) (d : dec X) → equalityOfTerms M N d ≡ True → M ≡ N
+-- ≡fromEquality (var x) (var y) d p = case {!   !} {!   !} (d x y)
+-- ≡fromEquality (app M M₁) (app N N₁) d p = app≡ {!   !} {!   !}
+-- ≡fromEquality (abs M) (abs N) d p = abs≡ (≡fromEquality M N (dec↑ d) p)
 
--- Given two terms, that are equal, then if there is a term in M but not N, then an issue happened...
-oNotIn : ∀ {X : Set} (M : Λ X) (N : Λ (↑ X)) → Λ→ i M ≡ N → o ∈ N → ⊥
-oNotIn M N p occ = {!   !}
+-- -- Given two terms, that are equal, then if there is a term in M but not N, then an issue happened...
+-- oNotIn : ∀ {X : Set} (M : Λ X) (N : Λ (↑ X)) → Λ→ i M ≡ N → o ∈ N → ⊥
+-- oNotIn M N p occ = {!   !}
 
-lercherEq2Yesio : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) x → (d : dec X) → x ∈ A1 → (∀ z → z ∈ A1 → z ≡ x × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ x) × (Λ→ i (f o) ≡ var x ⊔ Λ→ i (f z) ≡ var z)) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
-lercherEq2Yesio {X} A1 A3 B f x d occ h p = {!   !}
-{-
-lercherEq2Yesio (var (i o)) A3 B f x d here fn p =
- let FB = ≡fromEquality (f (i o)) _ (dec↑ d) p
-     c1 = λ {(lhs , rhs) → oNotIn _ _ ((~ rhs) ! FB) (down (left here A3))}
- in case c1 (λ z → _×_.fst z refl) (fn (i o) here)
--- Incorrect Generalization?
-lercherEq2Yesio (abs r) A3 B f x d (down occ) fn p =
- let FB = ≡fromEquality (bind (Λ↑ ∘ ↑→ f) r) (app (abs r) A3) (dec↑ (dec↑ d)) p
- in ?
- -- in case (λ {(lhs , rhs) → {!   !}}) (λ z → _×_.fst z ?) (fn (i o) (down occ))
--}
+-- ioLemma : ∀ {X : Set} (A1 : Λ (↑ (↑ (↑ X)))) (A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) x → (d : dec X) → f x ≡ Λ→ i B → (i x) ∈ A1 → equalityOfTerms (bind (Λ↑ ∘ ↑→ f) A1) (app (abs A1) A3) (dec↑ (dec↑ d)) ≡ True → ⊥ 
+-- ioLemma (var x₁) A3 B f x d p occ eq = {!   !}
+-- ioLemma (app A1 A2) A3 B f x d p occ eq = {! down occ  !}
 
-breakBool : ∀ (b : Bool) → b ≡ True ⊔ b ≡ False
-breakBool True = inl refl
-breakBool False = inr refl
+-- lercherEq2Yesio : ∀ {X : Set} (A1 A3 : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) x → (d : dec X) → x ∈ A1 → (∀ z → z ∈ A1 → z ≡ x × (f z) ≡ (Λ→ i B) ⊔ ¬ (z ≡ x)) →  equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d) ≡ True → ⊥
+-- lercherEq2Yesio {X} (var x₁) A3 B f .x₁ d here h p = {!   !}
+-- lercherEq2Yesio {X} (abs A1) A3 B f x d (down occ) h p = case (λ {(refl , rhs) → {!   !}}) (λ z → z refl) (h x (down occ))
+-- {-
+-- lercherEq2Yesio (var (i o)) A3 B f x d here fn p =
+--  let FB = ≡fromEquality (f (i o)) _ (dec↑ d) p
+--      c1 = λ {(lhs , rhs) → oNotIn _ _ ((~ rhs) ! FB) (down (left here A3))}
+--  in case c1 (λ z → _×_.fst z refl) (fn (i o) here)
+-- -- Incorrect Generalization?
+-- lercherEq2Yesio (abs r) A3 B f x d (down occ) fn p =
+--  let FB = ≡fromEquality (bind (Λ↑ ∘ ↑→ f) r) (app (abs r) A3) (dec↑ (dec↑ d)) p
+--  in ?
+--  -- in case (λ {(lhs , rhs) → {!   !}}) (λ z → _×_.fst z ?) (fn (i o) (down occ))
+-- -}
 
-notEqEquals : ∀ {X} (M N : Λ X) (d : dec X) → M ≡ N → equalityOfTerms M N d ≡ False → ⊥
-notEqEquals (var x) .(var x) d refl p2 with d x x
-... | inr x₁ = x₁ refl
-notEqEquals (app M M₁) .(app M M₁) d refl p2 = case (λ q → notEqEquals M M d refl q) (λ q → notEqEquals M₁ M₁ d refl q) (∧-elim (equalityOfTerms M M d) (equalityOfTerms M₁ M₁ d) p2)
-notEqEquals (abs M) .(abs M) d refl p2 = notEqEquals M M (dec↑ d) refl p2
+-- breakBool : ∀ (b : Bool) → b ≡ True ⊔ b ≡ False
+-- breakBool True = inl refl
+-- breakBool False = inr refl
 
-lercherEq2lemma :  ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) (x : ↑ X) → x ∈ A1 → dec X → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var o
-lercherEq2lemma {X} A1 A2 f x occ dec eq = {!   !}
+-- notEqEquals : ∀ {X} (M N : Λ X) (d : dec X) → M ≡ N → equalityOfTerms M N d ≡ False → ⊥
+-- notEqEquals (var x) .(var x) d refl p2 with d x x
+-- ... | inr x₁ = x₁ refl
+-- notEqEquals (app M M₁) .(app M M₁) d refl p2 = case (λ q → notEqEquals M M d refl q) (λ q → notEqEquals M₁ M₁ d refl q) (∧-elim (equalityOfTerms M M d) (equalityOfTerms M₁ M₁ d) p2)
+-- notEqEquals (abs M) .(abs M) d refl p2 = notEqEquals M M (dec↑ d) refl p2
 
-lercherEq2' : ∀ {X Y} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ Y) (g : X → Λ Y) → dec X → bind f A1 ≡ bind g (abs (app A1 A2)) → A1 ≡ var o
-lercherEq2' = ?
+-- lercherEq2lemma :  ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) (x : ↑ X) → x ∈ A1 → dec X → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var o
+-- lercherEq2lemma {X} (var (i x)) A2 f .(i x) here d eq = {!   !}
+-- lercherEq2lemma {X} (var o) A2 f .o here d eq = refl
+-- lercherEq2lemma {X} (abs A1) A2 f x occ d eq = {!   !}
+
+-- Spine of a term is the number of abstractions on the left
+spineLengthOfTerm : ∀ {X : Set} (M : Λ X) → Nat
+spineLengthOfTerm (var x) = O
+spineLengthOfTerm (app M M₁) = spineLengthOfTerm M
+spineLengthOfTerm (abs M) = S (spineLengthOfTerm M)
+
+-- Spine Path: the number of abstractions + first variable observed!
+spinePathOfTerm : ∀ {X : Set} (M : Λ X) → Λ X
+spinePathOfTerm (var x) = var x
+spinePathOfTerm (app M M₁) = spinePathOfTerm M
+spinePathOfTerm (abs M) = abs (spinePathOfTerm M)
+
+-- Given two Terms, decide if they equal or not using their spines.
+decSpinePath : ∀ {X : Set} (M N : Λ X) → dec X → (spinePathOfTerm M) ≡ (spinePathOfTerm N) ⊔ ¬ ((spinePathOfTerm M) ≡ (spinePathOfTerm N))
+decSpinePath M N d = {!   !}
+
+-- Lemma 1: If two terms have different spine lengths, they can't be equal
+≡spineLength : ∀ {X : Set} (M N : Λ X) → ¬ (spineLengthOfTerm M ≡ spineLengthOfTerm N) → M ≡ N → ⊥
+≡spineLength M _ neq refl = neq refl 
+
+-- Lemma 2: If a spine doesn't contain a term being subsitited into, then no change happens..
+spineOnNoVar : ∀ {X} (M : Λ (↑ X)) (N : Λ X) (f : ↑ X → Λ X) (x : ↑ X) → ¬ (x ∈ spinePathOfTerm M) → (∀ (z : ↑ X) → z ∈ M → (z ≡ x × f x ≡ N) ⊔ lenTerm (f z) ≡ O) → lenTerm (bind f (spinePathOfTerm M)) ≡ lenTerm (spinePathOfTerm M)
+spineOnNoVar (var y) N f x nocc fn = case (λ {(refl , rhs) → exfalso (nocc here)}) id (fn y here)
+spineOnNoVar (app M M₁) N f x nocc fn = spineOnNoVar M N f x nocc (λ z z₁ → fn z (left z₁ M₁))
+spineOnNoVar (abs M) N f x nocc fn = ext S (spineOnNoVar M (Λ→ i N) _ (i x) (λ z → nocc (down z)) {!   !})
+
+bindOnNoVar : ∀ {X} (M : Λ (↑ X)) (N : Λ X) (f : ↑ X → Λ X) x → ¬ (x ∈ M) → (∀ (z : ↑ X) → z ∈ M → (z ≡ x × f x ≡ N) ⊔ lenTerm (f z) ≡ O) → lenTerm (bind f M) ≡ lenTerm M
+bindOnNoVar (var x) N f y nocc fn = case ((λ { (refl , rhs) → exfalso (nocc here)})) id (fn x here)
+bindOnNoVar (app M M₁) N f y nocc fn = ext S (tran++ (bindOnNoVar M N f y (λ z → nocc (left z M₁)) λ z z₁ → fn z (left z₁ M₁)) (bindOnNoVar M₁ N f y (λ z → nocc (right M z)) λ z z₁ → fn z (right M z₁)))
+bindOnNoVar (abs M) N f y nocc fn = ext S (bindOnNoVar M (Λ→ i N) _ (i y) (λ q → nocc (down q)) 
+      λ {o → λ q → inr refl; 
+        (i o) → λ q → case (λ {(refl , rhs) → exfalso (nocc (down q))}) (λ q → inr (~(mapKeepsLength i (f o)) ! q)) (fn o (down q)); 
+        (i (i x)) → λ q → case (λ {(refl , rhs) → exfalso (nocc (down q))}) (λ q → inr (~(mapKeepsLength i (f (i x))) ! q)) (fn (i x) (down q))})
+
+lercherEq2Occ : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → o ∈ A1 → A1 ≡ var o
+lercherEq2Occ .(var o) A2 B d p here = refl
+-- All (i o)s in R become weaking of B
+-- RHS: abs (app (abs r) A2), the length of the "spine" is spine(r) + 2
+-- LHS: abs (r [Λ→ i B]), the length of the spine is spine(r [Λ→ i B]) + 1
+-- Once a var is reached, the spine calculation is done.
+-- On the left path of R, if there is no (i o)s, then the spines can't be equal in length, because no substitution occurs
+-- If B is var, then spine doesn't change
+-- If B is app B1 B2, then the spine is spine(B1).
+-- If B is abs B1, then spine is spine(B1) + 1.
+-- Regardless, if there is something happening at the end of the spine path, then the original spine path must contain an (i o)/o at the end
+-- However, Λ→ i B can't contain o. Thus, the spines can't be equal.
+lercherEq2Occ (abs r) A2 B d p (down occ) = 
+  let spinePathOfR = spinePathOfTerm r
+      spinePathOfLHS = spinePathOfTerm (abs r [ B ])
+      spineLengthOfLHS = spineLengthOfTerm (abs r [ B ])
+      spinePathOfRHS = spinePathOfTerm (abs (app (abs r) A2))
+      spineLengthOfRHS = spineLengthOfTerm (abs (app (abs r) A2))
+      -- if (i o) is in the path of R
+      c1 = λ q → {!   !}
+      -- if (i o) isn't in the path of R, then no substiution occurs.
+      -- Namely, I am given that LHS ≡ RHS, need to show that no subs occurs on LHS, then done using lemma 
+      c2 = λ q → 
+           -- Show the fact that the spine of abs r [ B ] is the same as abs r. (OR their lengths?)
+           -- Show that the lengths of abs r and abs (app (abs r) A2) isn't equal.
+           let noSubOcc = spineOnNoVar (abs r) B (io var B) o (λ {(down q2) → q q2}) λ {o → λ _ → inl (refl , refl) ; (i x) → λ _ → inr refl}
+           in exfalso (≡spineLength _ _ (λ z → {! ~ z ! noSubOcc   !}) (ext spinePathOfTerm p))
+  in case c1 c2 (decΛ (decAti o decAto) spinePathOfR)
+
+
+
+lercherEq2' : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
+lercherEq2' A1 A2 B d p with decΛ decAto A1
+... | inr no = 
+       let noSub = bindOnNoVar A1 B (io var B) o no λ {o → λ _ → inl (refl , refl) ; (i x) → λ _ → inr refl}  
+       in exfalso (equalLength (bind (io var B) A1) (abs (app A1 A2)) p λ q → numbersDontAdd2 (lenTerm A1) (lenTerm A1) (lenTerm A2) refl (~ noSub ! q))
+... | inl yes = lercherEq2Occ A1 A2 B d p yes
+
+
 
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
--- lercherEq2 A1 A2 B d p -- = lercherEq2' _ _ (io var B) p
-lercherEq2 (var o) A2 B d p = refl
-lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
-lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
--- lercherEq2 (abs (app A1 A3)) A2 B d p with decΛ (decAti o decAto) A1
--- ... | inl here =
+lercherEq2 A1 A2 B d p = {!   !} -- = lercherEq2' _ _ (io var B) p
+-- lercherEq2 (var o) A2 B d p = refl
+-- lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
+-- lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
+-- -- lercherEq2 (abs (app A1 A3)) A2 B d p with decΛ (decAti o decAto) A1
+-- -- ... | inl here =
+-- --   let (lhs , rhs) = app≡inv (abs≡inv p)
+-- --    in {!   !}
+-- -- ... | inl (down yes) = {!   !}
+-- -- ...                                         | inr no  = {!   !}
+-- lercherEq2 {X} (abs (app A1 A3)) A2 B d p =
 --   let (lhs , rhs) = app≡inv (abs≡inv p)
---    in {!   !}
--- ... | inl (down yes) = {!   !}
--- ...                                         | inr no  = {!   !}
-lercherEq2 {X} (abs (app A1 A3)) A2 B d p =
-  let (lhs , rhs) = app≡inv (abs≡inv p)
-      f : ↑ (↑ X) → Λ (↑ X)
-      f = (Λ↑ ∘ ↑→ (io var B))
-      g : ↑ (↑ X) → Λ (↑ X)
-      g = λ {(o) → var o ; (i o) → Λ→ i B ; (i (i x)) → var (i x) }
-      f≃g : f ≃ g
-      f≃g = λ {(o) → refl ; (i (i x)) → refl ; (i o) → refl }
-      aux : i o ∈ A1 ⊔ ¬ (i o ∈ A1) → ⊥
-      aux = (λ { (inl yes) → let
-                  c1 = λ q → {!   !} -- lercherEq2Yesio A1 A3 B _ d yes (λ {o → λ q → inr (((λ ()) , inl refl)) ; (i o) → λ _ → inl (refl , refl) ; (i (i x)) → λ _ → inr ((λ ()) , inr refl)}) q
-                  c2 = λ q → notEqEquals _ _ (dec↑ d) lhs q
-                  in case c1 c2 (breakBool (equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d))) ;
-                  (inr no) → let
-                  c1 = lercherEq2No A1 B f (i o) d no ((λ { o → λ _ → inr refl ; (i o) → λ _ → inl refl ; (i (i x)) → λ _ → inr refl }))
-                  c2 = ext lenTerm lhs
-                  in numbersDontAdd2 _ _ _ refl ((~ c1) ! c2) })
-      -- r = {! occurs  !}
-      -- e = bind-ext  (λ {(o) → {!   !} ; (i x) → {!   !} }) A1
-      -- recCall = lercherEq2 A1 A3 (io (Λ↑ ∘ i) (Λ→ i B) o ) (dec↑ d) (e  ! lhs)
-  -- in exfalso (aux (decΛ (decAti o (decAto)) A1))
-  in {!   !}
+--       f : ↑ (↑ X) → Λ (↑ X)
+--       f = (Λ↑ ∘ ↑→ (io var B))
+--       g : ↑ (↑ X) → Λ (↑ X)
+--       g = λ {(o) → var o ; (i o) → Λ→ i B ; (i (i x)) → var (i x) }
+--       f≃g : f ≃ g
+--       f≃g = λ {(o) → refl ; (i (i x)) → refl ; (i o) → refl }
+--       aux : i o ∈ A1 ⊔ ¬ (i o ∈ A1) → ⊥
+--       aux = (λ { (inl yes) → let
+--                   c1 = λ q → {!   !} -- lercherEq2Yesio A1 A3 B _ d yes (λ {o → λ q → inr (((λ ()) , inl refl)) ; (i o) → λ _ → inl (refl , refl) ; (i (i x)) → λ _ → inr ((λ ()) , inr refl)}) q
+--                   c2 = λ q → notEqEquals _ _ (dec↑ d) lhs q
+--                   in case c1 c2 (breakBool (equalityOfTerms (bind f A1) (abs (app A1 A3)) (dec↑ d))) ;
+--                   (inr no) → let
+--                   c1 = lercherEq2No A1 B f (i o) d no ((λ { o → λ _ → inr refl ; (i o) → λ _ → inl refl ; (i (i x)) → λ _ → inr refl }))
+--                   c2 = ext lenTerm lhs
+--                   in numbersDontAdd2 _ _ _ refl ((~ c1) ! c2) })
+--       -- r = {! occurs  !}
+--       -- e = bind-ext  (λ {(o) → {!   !} ; (i x) → {!   !} }) A1
+--       -- recCall = lercherEq2 A1 A3 (io (Λ↑ ∘ i) (Λ→ i B) o ) (dec↑ d) (e  ! lhs)
+--   -- in exfalso (aux (decΛ (decAti o (decAto)) A1))
+--   in {!   !}
 
 --   with decΛ decAto A1
 -- -- If o not in A, then A [ B ] = A contraction on length.
@@ -421,23 +499,6 @@ lercherEq2 {X} (abs (app A1 A3)) A2 B d p =
 -- occursLemmaAbs' (abs (app A1 A3)) A2 p =
 --   let (lhs , rhs) = app≡inv (abs≡inv p)
 --    in equalLength _ _ lhs λ q → (numbersDontAdd2 _ _ _ (mapKeepsLength (↑→ (↑→ i)) A1) q)
-
-implications : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) (f : (↑ X) → Λ X) → dec X → bind f A1 ≡ abs (app A1 A2) → A1 ≡ abs (app (Λ→ (↑→ i) A1) (Λ→ i A2))
-implications (var x) A2 B f d p1 with f x
-...                             | var y = exfalso (equalLength _ _ p1 (λ ()))
-...                             | app M N  = exfalso (equalTermsEqualLengths _ _ d p1 refl)
-...                             | abs M = exfalso {!   !}
-implications (abs (var (i x))) A2 B f d p1 with f x
-...                             | var y = exfalso (equalLength _ _ p1 (λ ()))
-...                             | app M N  = {!   !}
-...                             | abs M = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (abs≡inv p1) refl)
-implications (abs (app A1 A3)) A2 B f d p1 =
-  let (lhs , rhs) = app≡inv (abs≡inv p1)
-      r1 = implications A1 A3 ((Λ→ i B)) _ (dec↑ d) lhs
-  in exfalso (equalLength _ _ r1 (λ q → numbersDontAdd2 _ _ _ (mapKeepsLength _ A1) q))
-
-lercherEq2⊥ : ∀ (A1 A2 : Λ (↑ ⊥)) (B : Λ ⊥) → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
-lercherEq2⊥ A1 A2 B p1 = exfalso (occursLemmaAbs' A1 (Λ→ i A2) (implications A1 A2 B (io var B) dec⊥ p1))
 
 lercherHelper : ∀ (P1 P2 : Λ (↑ ⊥)) (Q : Λ ⊥) → P1 ≡ var o → P2 ≡ var o ⊔ P2 ≡ Λ→ i Q → (app P1 P2) [ Q ] ≡ app (abs (app P1 P2)) Q → abs (app P1 P2) ≡ ω × Q ≡ ω
 lercherHelper .(var o) .(var o) Q refl (inl refl) p3 = refl , _×_.fst (app≡inv p3)
@@ -474,3 +535,4 @@ lercher (app P1 P2) Q prf =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
+     
