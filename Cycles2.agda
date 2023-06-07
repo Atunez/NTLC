@@ -374,39 +374,108 @@ mapKeepTermLength (abs M) f refl = ext S (~ (mapKeepsLength _ _))
 -- lercherEq2lemma {X} (var o) A2 f .o here d eq = refl
 -- lercherEq2lemma {X} (abs A1) A2 f x occ d eq = {!   !}
 
+
+data §Λ (X : Set) : Set where
+  varS : X → §Λ X
+  absS : §Λ (↑ X) → §Λ X
+
+Λto§Λ : ∀ {X : Set} (M : Λ X) → §Λ X
+Λto§Λ (var x) = varS x
+Λto§Λ (app M M₁) = Λto§Λ M
+Λto§Λ (abs M) = absS (Λto§Λ M)
+
+§ΛtoΛ : ∀ {X : Set} (M : §Λ X) → Λ X
+§ΛtoΛ (varS x) = var x
+§ΛtoΛ (absS M) = abs (§ΛtoΛ M)
+
 -- Spine of a term is the number of abstractions on the left
-spineLengthOfTerm : ∀ {X : Set} (M : Λ X) → Nat
-spineLengthOfTerm (var x) = O
-spineLengthOfTerm (app M M₁) = spineLengthOfTerm M
-spineLengthOfTerm (abs M) = S (spineLengthOfTerm M)
+lenSTerm : ∀ {X : Set} (M : §Λ X) → Nat
+lenSTerm (varS x) = O
+lenSTerm (absS M) = S (lenSTerm M)
 
--- Spine Path: the number of abstractions + first variable observed!
-spinePathOfTerm : ∀ {X : Set} (M : Λ X) → Λ X
-spinePathOfTerm (var x) = var x
-spinePathOfTerm (app M M₁) = spinePathOfTerm M
-spinePathOfTerm (abs M) = abs (spinePathOfTerm M)
+Λ≡to§Λ≡ : ∀ {X : Set} (M N : Λ X) → M ≡ N → Λto§Λ M ≡ Λto§Λ N
+Λ≡to§Λ≡ M N refl = refl
 
--- Given two Terms, decide if they equal or not using their spines.
-decSpinePath : ∀ {X : Set} (M N : Λ X) → dec X → (spinePathOfTerm M) ≡ (spinePathOfTerm N) ⊔ ¬ ((spinePathOfTerm M) ≡ (spinePathOfTerm N))
-decSpinePath M N d = {!   !}
+lenSTerm§≡ : ∀ {X : Set} (M N : §Λ X) → M ≡ N → lenSTerm M ≡ lenSTerm N
+lenSTerm§≡ M N refl = refl
 
--- Lemma 1: If two terms have different spine lengths, they can't be equal
-≡spineLength : ∀ {X : Set} (M N : Λ X) → ¬ (spineLengthOfTerm M ≡ spineLengthOfTerm N) → M ≡ N → ⊥
-≡spineLength M _ neq refl = neq refl 
+-- -- Spine Path: the number of abstractions + first variable observed!
+-- spinePathOfTerm : ∀ {X : Set} (M : Λ X) → Λ X
+-- spinePathOfTerm (var x) = var x
+-- spinePathOfTerm (app M M₁) = spinePathOfTerm M
+-- spinePathOfTerm (abs M) = abs (spinePathOfTerm M)
 
--- Lemma 2: If a spine doesn't contain a term being subsitited into, then no change happens..
-spineOnNoVar : ∀ {X} (M : Λ (↑ X)) (N : Λ X) (f : ↑ X → Λ X) (x : ↑ X) → ¬ (x ∈ spinePathOfTerm M) → (∀ (z : ↑ X) → z ∈ M → (z ≡ x × f x ≡ N) ⊔ lenTerm (f z) ≡ O) → lenTerm (bind f (spinePathOfTerm M)) ≡ lenTerm (spinePathOfTerm M)
-spineOnNoVar (var y) N f x nocc fn = case (λ {(refl , rhs) → exfalso (nocc here)}) id (fn y here)
-spineOnNoVar (app M M₁) N f x nocc fn = spineOnNoVar M N f x nocc (λ z z₁ → fn z (left z₁ M₁))
-spineOnNoVar (abs M) N f x nocc fn = ext S (spineOnNoVar M (Λ→ i N) _ (i x) (λ z → nocc (down z)) {!   !})
+-- -- Given two Terms, decide if they equal or not using their spines.
+-- decSpinePath : ∀ {X : Set} (M N : Λ X) → dec X → (spinePathOfTerm M) ≡ (spinePathOfTerm N) ⊔ ¬ ((spinePathOfTerm M) ≡ (spinePathOfTerm N))
+-- decSpinePath M N d = {!   !}
 
-bindOnNoVar : ∀ {X} (M : Λ (↑ X)) (N : Λ X) (f : ↑ X → Λ X) x → ¬ (x ∈ M) → (∀ (z : ↑ X) → z ∈ M → (z ≡ x × f x ≡ N) ⊔ lenTerm (f z) ≡ O) → lenTerm (bind f M) ≡ lenTerm M
-bindOnNoVar (var x) N f y nocc fn = case ((λ { (refl , rhs) → exfalso (nocc here)})) id (fn x here)
-bindOnNoVar (app M M₁) N f y nocc fn = ext S (tran++ (bindOnNoVar M N f y (λ z → nocc (left z M₁)) λ z z₁ → fn z (left z₁ M₁)) (bindOnNoVar M₁ N f y (λ z → nocc (right M z)) λ z z₁ → fn z (right M z₁)))
-bindOnNoVar (abs M) N f y nocc fn = ext S (bindOnNoVar M (Λ→ i N) _ (i y) (λ q → nocc (down q)) 
-      λ {o → λ q → inr refl; 
-        (i o) → λ q → case (λ {(refl , rhs) → exfalso (nocc (down q))}) (λ q → inr (~(mapKeepsLength i (f o)) ! q)) (fn o (down q)); 
-        (i (i x)) → λ q → case (λ {(refl , rhs) → exfalso (nocc (down q))}) (λ q → inr (~(mapKeepsLength i (f (i x))) ! q)) (fn (i x) (down q))})
+-- -- Lemma 1: If two terms have different spine lengths, they can't be equal
+-- ≡spineLength : ∀ {X : Set} (M N : Λ X) → ¬ (spineLengthOfTerm M ≡ spineLengthOfTerm N) → M ≡ N → ⊥
+-- ≡spineLength M _ neq refl = neq refl 
+
+S→ : ∀ {X Y : Set} → (X → Y) → §Λ X → §Λ Y
+S→ f (varS x)     = varS (f x)
+S→ f (absS M)     = absS (S→ (↑→ f) M)
+
+S↑ : ∀ {X : Set} → ↑ (§Λ X) → §Λ (↑ X)
+S↑ = io (S→ i) (varS o)
+
+bindS : ∀ {X Y : Set} → (X → §Λ Y) → §Λ X → §Λ Y
+bindS f (varS x) = f x
+bindS f (absS M) = absS (bindS (S↑ ∘ ↑→ f) M)
+
+spineSub : ∀ {X} (M : §Λ (↑ X)) (N : §Λ X) → §Λ X
+spineSub M N = bindS (io varS N) M
+
+dec§Λ : ∀ {X} {x} → (decAt X x) → (t : §Λ X)  → x ∈ (§ΛtoΛ t) ⊔ ¬ (x ∈ (§ΛtoΛ t))
+dec§Λ d (varS x) with d x
+... | inl refl = inl here
+... | inr y = inr λ {here → y refl}
+dec§Λ {X} {x} d (absS t) with dec§Λ (decAti x d) t
+... | inl y = inl (down y)
+... | inr y = inr λ {(down occ) → y occ}
+
+mapKeepsSLength : ∀ {X Y : Set} → (f : X → Y) → (M : §Λ X) → lenSTerm M ≡ lenSTerm (S→ f M)
+mapKeepsSLength f (varS x) = refl
+mapKeepsSLength f (absS M) = ext S (mapKeepsSLength (↑→ f) M)
+
+absS≡ : ∀ {X : Set} {M N : §Λ (↑ X)} → M ≡ N → absS M ≡ absS N
+absS≡ refl = refl 
+
+absS≡inv : ∀ {X : Set} {M N : §Λ (↑ X)} → absS M ≡ absS N → M ≡ N
+absS≡inv refl = refl
+
+
+noSubWithNoDecide : ∀ {X : Set} (M : §Λ (↑ X)) (N : §Λ X) (f : ↑ X → §Λ X) (x : ↑ X) → ¬ (x ∈ §ΛtoΛ M) →  (∀ (z : ↑ X) → z ∈ (§ΛtoΛ M) → (z ≡ x × f x ≡ N) ⊔ lenSTerm (f z) ≡ O) → lenSTerm (bindS f M) ≡ lenSTerm M
+noSubWithNoDecide (varS y) N f x nocc fn = case (λ {(refl , rhs) → exfalso (nocc here)}) id (fn y here)
+noSubWithNoDecide (absS M) N f x nocc fn = ext S (noSubWithNoDecide M (S→ i N) _ (i x) (λ z → nocc (down z)) 
+ λ {o → λ _ → inr refl; 
+ (i o) → λ q → case (λ {(refl , rhs) → inl ((refl , exfalso (nocc (down q))))}) (λ q2 → inr ((~(mapKeepsSLength i (f o))) ! q2)) (fn o (down q)); 
+ (i (i x)) → λ q → case (λ {(refl , rhs) → inl ((refl , exfalso (nocc (down q))))}) (λ q2 → inr ((~(mapKeepsSLength i (f (i x)))) ! q2)) (fn (i x) (down q))})  
+
+-- Unsure how to make this better
+-- Show that weakening can't give an O
+weakingHasNoO : ∀ {X : Set} (M : §Λ X) (N : §Λ (↑ X)) x → x ∈ (§ΛtoΛ N) → S→ i M ≡ N → ⊥ ⊔ ¬ (x ≡ o)
+weakingHasNoO M .(S→ i M) (i x) occ refl = inr (λ ())
+weakingHasNoO (absS (varS (i x))) .(absS (varS (i (i x)))) o (down ()) refl
+weakingHasNoO (absS (varS o)) .(absS (varS o)) o (down ()) refl
+weakingHasNoO (absS (absS M)) .(absS (absS (S→ (↑→ (↑→ i)) M))) o (down (down occ)) refl = {!   !}
+
+-- Formulate using bind...
+shuffleSubAndAbs : ∀ {X : Set} (M : §Λ (↑ (↑ (↑ X)))) (N : §Λ X) → spineSub (absS (absS M)) N ≡ absS (spineSub (absS M) (S→ i N))  
+shuffleSubAndAbs M N = {!   !}
+
+ioInSpinePath : ∀ {X : Set} (M : §Λ (↑ (↑ X))) (N : §Λ X) (x : ↑ (↑ X)) → x ∈ (§ΛtoΛ M) → (spineSub (absS M) N) ≡ absS (absS M) → ⊥
+ioInSpinePath (varS (i o)) N .(i o) here p = case (λ z → z) (λ z → z refl) (weakingHasNoO _ _ o (down here) (absS≡inv p))
+ioInSpinePath (absS M) N x (down occ) p = ioInSpinePath M (S→ i N) (i x) occ (absS≡inv (~ (shuffleSubAndAbs M N) ! p))
+
+-- The Spine of M [ N ] is equal to the Spine of (spine M) [ (spine N) ]
+-- Need a better formulation... Probably with Bind
+subWithSpines : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) → Λto§Λ (M [ N ]) ≡ spineSub (Λto§Λ M) (Λto§Λ N)
+subWithSpines (var (i x)) N = refl
+subWithSpines (var o) N = refl
+subWithSpines (app M M₁) N = subWithSpines M N
+subWithSpines (abs M) N = {!   !}
 
 lercherEq2Occ : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → o ∈ A1 → A1 ≡ var o
 lercherEq2Occ .(var o) A2 B d p here = refl
@@ -421,22 +490,32 @@ lercherEq2Occ .(var o) A2 B d p here = refl
 -- Regardless, if there is something happening at the end of the spine path, then the original spine path must contain an (i o)/o at the end
 -- However, Λ→ i B can't contain o. Thus, the spines can't be equal.
 lercherEq2Occ (abs r) A2 B d p (down occ) = 
-  let spinePathOfR = spinePathOfTerm r
-      spinePathOfLHS = spinePathOfTerm (abs r [ B ])
-      spineLengthOfLHS = spineLengthOfTerm (abs r [ B ])
-      spinePathOfRHS = spinePathOfTerm (abs (app (abs r) A2))
-      spineLengthOfRHS = spineLengthOfTerm (abs (app (abs r) A2))
+  let spinePathOfR = Λto§Λ r
+      spineOfB = Λto§Λ B
+      equalSpines = Λ≡to§Λ≡ _ _ p
+      equalSpineLengths = lenSTerm§≡ _ _ equalSpines
+      subbedSpines = subWithSpines (abs r) B
+      lenOfSubbedSpines = lenSTerm§≡ _ _ subbedSpines
       -- if (i o) is in the path of R
-      c1 = λ q → {!   !}
+      c1 = λ q → exfalso (ioInSpinePath spinePathOfR spineOfB (i o) q (~ subbedSpines ! equalSpines))
       -- if (i o) isn't in the path of R, then no substiution occurs.
       -- Namely, I am given that LHS ≡ RHS, need to show that no subs occurs on LHS, then done using lemma 
       c2 = λ q → 
            -- Show the fact that the spine of abs r [ B ] is the same as abs r. (OR their lengths?)
            -- Show that the lengths of abs r and abs (app (abs r) A2) isn't equal.
-           let noSubOcc = spineOnNoVar (abs r) B (io var B) o (λ {(down q2) → q q2}) λ {o → λ _ → inl (refl , refl) ; (i x) → λ _ → inr refl}
-           in exfalso (≡spineLength _ _ (λ z → {! ~ z ! noSubOcc   !}) (ext spinePathOfTerm p))
-  in case c1 c2 (decΛ (decAti o decAto) spinePathOfR)
+           let noSub = noSubWithNoDecide (absS spinePathOfR) spineOfB (io varS spineOfB) o (λ {(down q2) → q q2}) λ {o → λ _ → inl (refl , refl); (i x) → λ _ → inr refl}
+               issueNumber = ~ noSub ! ~ lenOfSubbedSpines ! equalSpineLengths
+           in exfalso (numbersDontAdd3 refl issueNumber)
+  in case c1 c2 (decΛ (decAti o decAto) (§ΛtoΛ spinePathOfR))
 
+
+bindOnNoVar : ∀ {X} (M : Λ (↑ X)) (N : Λ X) (f : ↑ X → Λ X) x → ¬ (x ∈ M) → (∀ (z : ↑ X) → z ∈ M → (z ≡ x × f x ≡ N) ⊔ lenTerm (f z) ≡ O) → lenTerm (bind f M) ≡ lenTerm M
+bindOnNoVar (var x) N f y nocc fn = case ((λ { (refl , rhs) → exfalso (nocc here)})) id (fn x here)
+bindOnNoVar (app M M₁) N f y nocc fn = ext S (tran++ (bindOnNoVar M N f y (λ z → nocc (left z M₁)) λ z z₁ → fn z (left z₁ M₁)) (bindOnNoVar M₁ N f y (λ z → nocc (right M z)) λ z z₁ → fn z (right M z₁)))
+bindOnNoVar (abs M) N f y nocc fn = ext S (bindOnNoVar M (Λ→ i N) _ (i y) (λ q → nocc (down q)) 
+      λ {o → λ q → inr refl; 
+        (i o) → λ q → case (λ {(refl , rhs) → exfalso (nocc (down q))}) (λ q → inr (~(mapKeepsLength i (f o)) ! q)) (fn o (down q)); 
+        (i (i x)) → λ q → case (λ {(refl , rhs) → exfalso (nocc (down q))}) (λ q → inr (~(mapKeepsLength i (f (i x))) ! q)) (fn (i x) (down q))})
 
 
 lercherEq2' : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
@@ -449,7 +528,7 @@ lercherEq2' A1 A2 B d p with decΛ decAto A1
 
 
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
-lercherEq2 A1 A2 B d p = {!   !} -- = lercherEq2' _ _ (io var B) p
+lercherEq2 A1 A2 B d p = lercherEq2' A1 A2 B d p
 -- lercherEq2 (var o) A2 B d p = refl
 -- lercherEq2 (abs (var (i o))) A2 (app (abs (var (i x))) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
 -- lercherEq2 (abs (var (i o))) A2 (app (abs (var o)) B₁) d p = exfalso (equalTermsEqualLengths _ _ (dec↑ d) (_×_.fst (app≡inv (abs≡inv p))) refl)
@@ -535,4 +614,4 @@ lercher (app P1 P2) Q prf =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
-     
+          
