@@ -256,6 +256,65 @@ occursLemmaAbs' (abs (app A1 A3)) A2 p =
 -- lercherEq2lemma .(abs (app _ t)) A2 f (down (left occ t)) p = {!   !}
 -- lercherEq2lemma .(abs (app s _)) A2 f (down (right s occ)) p = {!   !}
 
+isInj : ∀ {X Y : Set} → (X → Y) → Set
+isInj f = ∀ {x1 x2} → f x1 ≡ f x2 → x1 ≡ x2
+
+iInj : ∀ {X} → isInj (i {X})
+iInj refl = refl
+
+↑→Inj : ∀ {X Y} (f : X → Y) → isInj f → isInj (↑→ f)
+↑→Inj f inj {i x} {i x₁} p with iInj p
+...                           | q = ext i (inj q)
+↑→Inj f inj {o} {o} refl = refl
+
+occInj : ∀ {X Y} (f : X → Y) (finj : isInj f) (x : X) (t : Λ X) → f x ∈ Λ→ f t → x ∈ t
+occInj f finj x (var y) occ with f x | f y | finj {x} {y}
+occInj f finj x (var y) here | z | .z | q with q refl
+... | refl = here
+occInj f finj x (app t1 t2) (left occ .(Λ→ f t2)) = left (occInj f finj x t1 occ ) t2
+occInj f finj x (app t1 t2) (right .(Λ→ f t1) occ) = right t1 (occInj f finj x t2 occ)
+occInj f finj x (abs t0) (down occ) =  down (occInj (↑→ f) (↑→Inj f finj) (i x) t0 occ)
+
+occIni : ∀ {X} (s : Λ X) {x : X} → i x ∈ Λ→ i s → x ∈ s
+occIni s occ = occInj i iInj _ s occ
+
+notoccursΛ→  : ∀ {X Y} (f : X → Y) (y : Y) → (∀ x → ¬ (f x ≡ y) ) → ∀ t → ¬ (y ∈ Λ→ f t)
+notoccursΛ→ f .(f x) h (var x) here = h x refl
+notoccursΛ→ f y h (app t1 t2) (left occ .(Λ→ f t2)) = notoccursΛ→ f y h t1 occ
+notoccursΛ→ f y h (app t1 t2) (right .(Λ→ f t1) occ) = notoccursΛ→ f y h t2 occ
+notoccursΛ→ f y h (abs t0) (down occ) = notoccursΛ→ (↑→ f) (i y) h' t0 occ
+  where h' : ∀ x → ¬ (↑→ f x ≡ i y)
+        h' o ()
+        h' (i x) e = h x (iInj e)
+
+o∉Λ→i : ∀ {X} (s : Λ X) → ¬ (o ∈ Λ→ i s)
+o∉Λ→i s = notoccursΛ→ i o (λ x → λ {()} ) s
+
+∈≡ : ∀ {X} {x : X} {s t : Λ X} → x ∈ s → s ≡ t → x ∈ t
+∈≡ occ refl = occ
+
+lercherEq2gen : ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) x → x ∈ A1 → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var x ⊔ ¬ (o ∈ A2)
+lercherEq2gen (var y) A2 f .y here p = inl refl
+lercherEq2gen (abs (var .(i x))) A2 f x (down here) p with abs≡inv p
+lercherEq2gen (abs (var .(i (i x)))) A2 f (i x) (down here) p | p1 with f (i x)
+lercherEq2gen (abs (var .(i (i x)))) A2 f (i x) (down here) p | p1 | app s t with app≡inv p1
+lercherEq2gen (abs (var .(i (i x)))) A2 f (i x) (down here) p | p1 | app (abs s) t | p2 , p3 with abs≡inv p2
+lercherEq2gen (abs (var .(i (i x)))) A2 f (i x) (down here) p | p1 | app (abs (var (i .x))) t | p2 , p3 | refl
+  = inr λ oc → o∉Λ→i t (∈≡ oc (~ p3))
+lercherEq2gen (abs (var .(i o))) A2 f o (down here) p | p1 with f o
+... | app (abs t1) t2 with app≡inv p1
+... | (p3 , p4) with abs≡inv p3
+lercherEq2gen (abs (var .(i o))) A2 f o (down here) p | p1 | app (abs (var (i x))) t2 | p3 , p4 | ()
+lercherEq2gen (abs (var .(i o))) A2 f o (down here) p | p1 | app (abs (var o)) t2 | p3 , p4 | ()
+lercherEq2gen (abs (app A1 A3)) A2 f x occ p with app≡inv (abs≡inv p)
+lercherEq2gen (abs (app A1 A3)) A2 f x (down (left occ .A3)) p | p1 , p2 =
+  let f' = (λ y → io (Λ→ i) (var o) (↑→ f y))
+      rec = lercherEq2gen A1 A3 f' (i x) occ p1
+      c1 = λ A1=x → {!   !} -- this implies Λ→ i (f x) ≡ abs (app (var (i x)) A3), so f x contains x
+      c2 = λ x∉A3 → {!   !}
+  in case c1 c2 rec
+lercherEq2gen (abs (app A1 A3)) A2 f x (down (right .A1 occ)) p | p1 , p2 = {!   !}
+
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o
 -- lercherEq2 A1 A2 B d p -- = lercherEq2' _ _ (io var B) p
 lercherEq2 (var o) A2 B d p = refl
@@ -317,6 +376,8 @@ lercher (app P1 P2) Q prf =
        l1 = lercherEq2 _ _ _ dec⊥ lhs
        l2 = lercherEq3 Q P2 rhs
    in lercherHelper _ _ _ l1 l2 prf
+
+
 
 
 -- module CycleStuff where
