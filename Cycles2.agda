@@ -453,29 +453,95 @@ noSubWithNoDecide (absS M) N f x nocc fn = ext S (noSubWithNoDecide M (S→ i N)
  (i o) → λ q → case (λ {(refl , rhs) → inl ((refl , exfalso (nocc (down q))))}) (λ q2 → inr ((~(mapKeepsSLength i (f o))) ! q2)) (fn o (down q)); 
  (i (i x)) → λ q → case (λ {(refl , rhs) → inl ((refl , exfalso (nocc (down q))))}) (λ q2 → inr ((~(mapKeepsSLength i (f (i x)))) ! q2)) (fn (i x) (down q))})  
 
+
+
+
+isInj : ∀ {X Y : Set} → (X → Y) → Set
+isInj f = ∀ {x1 x2} → f x1 ≡ f x2 → x1 ≡ x2
+
+iInj : ∀ {X} → isInj (i {X})
+iInj refl = refl
+
+notoccursΛ→  : ∀ {X Y} (f : X → Y) (y : Y) → (∀ x → ¬ (f x ≡ y) ) → ∀ t → ¬ (y ∈ Λ→ f t)
+notoccursΛ→ f .(f x) h (var x) here = h x refl
+notoccursΛ→ f y h (app t1 t2) (left occ .(Λ→ f t2)) = notoccursΛ→ f y h t1 occ
+notoccursΛ→ f y h (app t1 t2) (right .(Λ→ f t1) occ) = notoccursΛ→ f y h t2 occ
+notoccursΛ→ f y h (abs t0) (down occ) = notoccursΛ→ (↑→ f) (i y) h' t0 occ
+  where h' : ∀ x → ¬ (↑→ f x ≡ i y)
+        h' o ()
+        h' (i x) e = h x (iInj e)
+
+o∉Λ→i : ∀ {X} (s : Λ X) → ¬ (o ∈ Λ→ i s)
+o∉Λ→i s = notoccursΛ→ i o (λ x → λ {()} ) s
+
+
+notoccursS→  : ∀ {X Y} (f : X → Y) (y : Y) → (∀ x → ¬ (f x ≡ y) ) → ∀ t → ¬ (y ∈ §ΛtoΛ (S→ f t))
+notoccursS→ f .(f x) h (varS x) here = h x refl
+notoccursS→ f y h (absS t) (down occ) = notoccursS→ (↑→ f) (i y) h' t occ
+  where h' : ∀ x → ¬ (↑→ f x ≡ i y)
+        h' o ()
+        h' (i x) e = h x (iInj e)
+
+o∉S→i : ∀ {X} (s : §Λ X) → ¬ (o ∈ §ΛtoΛ (S→ i s))
+o∉S→i s = notoccursS→ i o (λ x → λ {()} ) s
+
 -- Unsure how to make this better
 -- Show that weakening can't give an O
-weakingHasNoO : ∀ {X : Set} (M : §Λ X) (N : §Λ (↑ X)) x → x ∈ (§ΛtoΛ N) → S→ i M ≡ N → ⊥ ⊔ ¬ (x ≡ o)
-weakingHasNoO M .(S→ i M) (i x) occ refl = inr (λ ())
-weakingHasNoO (absS (varS (i x))) .(absS (varS (i (i x)))) o (down ()) refl
-weakingHasNoO (absS (varS o)) .(absS (varS o)) o (down ()) refl
-weakingHasNoO (absS (absS M)) .(absS (absS (S→ (↑→ (↑→ i)) M))) o (down (down occ)) refl = {!   !}
+weakingHasNoO : ∀ {X : Set} (M : §Λ X) (N : §Λ (↑ X)) → o ∈ (§ΛtoΛ N) → S→ i M ≡ N → ⊥
+weakingHasNoO M .(S→ i M) occ refl = (o∉S→i M) occ
 
--- Formulate using bind...
-shuffleSubAndAbs : ∀ {X : Set} (M : §Λ (↑ (↑ (↑ X)))) (N : §Λ X) → spineSub (absS (absS M)) N ≡ absS (spineSub (absS M) (S→ i N))  
-shuffleSubAndAbs M N = {!   !}
+bindS-ext : ∀ {X Y : Set} (M : §Λ X) (f g : X → §Λ Y) → f ≃ g → bindS f M ≡ bindS g M
+bindS-ext (varS x) f g p = p x
+bindS-ext (absS M) f g p = absS≡ (bindS-ext M _ _ λ {o → refl; (i x) → ext (S→ i) (p x)})
+
+-- -- extract variable from §Λ
+-- extract : ∀ {X : Set} (M : §Λ X) → §Λ (↑ X)
+-- extract (varS x) = varS (i x)
+-- extract (absS M) = extract M
+
+-- NOT TRUE STATEMENT
+-- -- Formulate using bind...
+-- -- No need? M can only contain one variable. In the case of a variable, is bound to be (i o).
+-- shuffleSubAndAbs : ∀ {X : Set} (M : §Λ (↑ (↑ (↑ X)))) (N : §Λ X) → (i o) ∈ (§ΛtoΛ M) → spineSub (absS (absS M)) N ≡ absS (spineSub (absS M) (S→ i N))  
+-- shuffleSubAndAbs M N occ = absS≡ (absS≡ (bindS-ext M _ _ (λ {o → refl; (i (i (i x))) → refl; (i (i x)) → {!   !}
+--                                                                                            ; (i o) → {!   !}})))
+
 
 ioInSpinePath : ∀ {X : Set} (M : §Λ (↑ (↑ X))) (N : §Λ X) (x : ↑ (↑ X)) → x ∈ (§ΛtoΛ M) → (spineSub (absS M) N) ≡ absS (absS M) → ⊥
-ioInSpinePath (varS (i o)) N .(i o) here p = case (λ z → z) (λ z → z refl) (weakingHasNoO _ _ o (down here) (absS≡inv p))
-ioInSpinePath (absS M) N x (down occ) p = ioInSpinePath M (S→ i N) (i x) occ (absS≡inv (~ (shuffleSubAndAbs M N) ! p))
+ioInSpinePath (varS (i o)) N .(i o) here p = weakingHasNoO _ _ (down here) (absS≡inv p)
+ioInSpinePath (absS M) (varS x₁) x (down occ) p = {!   !} -- p implies that LHS < RHS 
+ioInSpinePath (absS M) (absS (varS y)) x (down occ) p = {!   !} -- How to get the contradiction?
+ioInSpinePath (absS M) (absS (absS N)) x (down occ) p = {!   !} -- p implies that LHS > RHS
+
+-- ioInSpinePath (absS M) N (i (i x)) (down occ) p = ioInSpinePath M (S→ i N) (i (i (i x))) occ {!  absS≡inv (absS≡inv p) !}
+-- ioInSpinePath (absS M) N (i o) (down occ) p = 
+--   let c = absS≡inv (absS≡inv p)
+--       f = (λ x → S↑ (↑→ (λ x₁ → S↑ (↑→ (io varS N) x₁)) x))
+--       g = λ {o → varS o; (i o) → varS (i o); (i (i o)) → S→ i (S→ i N); (i (i (i x))) → varS (i (i x))}
+--       f≃g : f ≃ g
+--       f≃g = λ {o → refl; (i o) → refl; (i (i o)) → refl; (i (i (i x))) → refl}
+--   in ioInSpinePath M (S→ i N) (i (i o)) occ {! absS≡inv (absS≡inv p)   !}
+-- ioInSpinePath (absS M) N o (down occ) p = 
+--   let c = absS≡inv (absS≡inv p)
+--   in ioInSpinePath M (S→ i N) (i o) occ {! down occ  !}
+
+addI : ∀ {X Y : Set} (M : Λ X) (N : §Λ X) → Λto§Λ M ≡ N → (f : X → Y) → Λto§Λ (Λ→ f M) ≡ S→ f N
+addI (var x) .(varS x) refl f = refl
+addI (app M M₁) .(Λto§Λ M) refl f = addI M (Λto§Λ M) refl f
+addI (abs M) .(absS (Λto§Λ M)) refl f = absS≡ (addI M (Λto§Λ M) refl (↑→ f))
 
 -- The Spine of M [ N ] is equal to the Spine of (spine M) [ (spine N) ]
 -- Need a better formulation... Probably with Bind
+bindAndBindS : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) (f : ↑ X → Λ X) (g : ↑ X → §Λ X) → (∀ (z : ↑ X) → z ∈ M → Λto§Λ (f z) ≡ g z) → Λto§Λ (bind f M) ≡ bindS g (Λto§Λ M)
+bindAndBindS (var x) N f g fn = fn x here
+bindAndBindS (app M M₁) N f g fn = bindAndBindS M N f g (λ z z₁ → fn z (left z₁ M₁))
+bindAndBindS (abs M) N f g fn = absS≡ (bindAndBindS M (Λ→ i N) _ _ λ {o → λ _ → refl; (i o) → λ q → addI (f o) (g o) (fn o (down q)) i; (i (i x)) → λ q → addI (f (i x)) (g (i x)) (fn (i x) (down q)) i})
+
 subWithSpines : ∀ {X : Set} (M : Λ (↑ X)) (N : Λ X) → Λto§Λ (M [ N ]) ≡ spineSub (Λto§Λ M) (Λto§Λ N)
 subWithSpines (var (i x)) N = refl
 subWithSpines (var o) N = refl
 subWithSpines (app M M₁) N = subWithSpines M N
-subWithSpines (abs M) N = {!   !}
+subWithSpines (abs M) N = absS≡ (bindAndBindS M (Λ→ i N) _ _ λ {o → λ _ → refl; (i o) → λ q → addI N (Λto§Λ N) refl i; (i (i x)) → λ _ → refl})
 
 lercherEq2Occ : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X) → dec X → A1 [ B ] ≡ abs (app A1 A2) → o ∈ A1 → A1 ≡ var o
 lercherEq2Occ .(var o) A2 B d p here = refl
@@ -614,4 +680,4 @@ lercher (app P1 P2) Q prf =
 --   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
 
 --             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
-          
+            
