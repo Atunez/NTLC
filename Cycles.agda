@@ -156,7 +156,7 @@ o∉Λ→i s = notoccursΛ→ i o (λ x → λ {()} ) s
 ∈≡ occ refl = occ
 
 lercherEq2gen : ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var o
-lercherEq2gen (var (i x)) A2 f fn p = 
+lercherEq2gen (var (i x)) A2 f fn p =
  let t = ~ (fn x (∈≡ (down (left here A2)) (~ p))) ! p
  in exfalso (equalLength _ _ t (λ {()}))
 lercherEq2gen (var o) A2 f fn p = refl
@@ -169,7 +169,7 @@ lercherEq2gen (abs (var (i o))) A2 f fn p with abs≡inv p
 lercherEq2gen (abs (app A1 A3)) A2 f fn p with app≡inv (abs≡inv p)
 ...         | (p1 , p2) = let g = λ x → io (Λ→ i) (var o) (↑→ f x)
                               gn = λ {o → λ q → exfalso (o∉Λ→i (f o) q); (i x) → λ q → ext (Λ→ i) (fn x (occIni (f (i x)) q))}
-                              rec = lercherEq2gen A1 A3 g gn p1 
+                              rec = lercherEq2gen A1 A3 g gn p1
                             in ~ p1 ! ext (bind g) rec
 
 lercherEq2 : ∀ {X} (A1 A2 : Λ (↑ X)) (B : Λ X)→ A1 [ B ] ≡ abs (app A1 A2) → A1 ≡ var o

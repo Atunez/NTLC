@@ -1,4 +1,4 @@
-module Equality where
+module BasicLogic where
 
 -- IDENTITY AND COMPOSITION
 -- ∘ is \o
