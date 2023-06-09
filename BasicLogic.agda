@@ -51,6 +51,7 @@ case f g (inr x) = g x
 infix 18 _≡_
 data _≡_ {A : Set} : A → A → Set where
     refl : ∀ {a : A} → a ≡ a
+{-# BUILTIN EQUALITY _≡_  #-}
 
 -- Transport of properties over equality (≡-elim)
 transp : ∀ {A : Set} (B : A → Set) {a1 a2 : A} → a1 ≡ a2 → B a1 → B a2
@@ -65,7 +66,7 @@ infixl 10 _!_
 _!_ : ∀ {X} {x y z : X} → x ≡ y → y ≡ z → x ≡ z
 refl ! q = q
 
--- Equality of functions
+-- EQUALITY OF FUNCTIONS
 -- ≃ is \simeq or \~-
 _≃_ : ∀ {X Y : Set} → (X → Y) → (X → Y) → Set
 f ≃ g = ∀ x → f x ≡ g x
