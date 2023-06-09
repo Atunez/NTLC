@@ -27,6 +27,16 @@ module Terms where
   abs≡ : ∀ {X} {s t : Λ (↑ X)} → s ≡ t → abs s ≡ abs t
   abs≡ = ext abs
 
+
+  app≡inv : ∀ {X} {M M' N N' : Λ X} → app M N ≡ app M' N' → M ≡ M' × N ≡ N'
+  app≡inv refl = ( refl , refl )
+
+  abs≡inv : ∀ {X} {M M' : Λ (↑ X)} → abs M ≡ abs M' → M ≡ M'
+  abs≡inv refl = refl
+
+  var≡inv : ∀ {X} {M M' : X} → var M ≡ var M' → M ≡ M'
+  var≡inv refl = refl
+
   -- Λ is a functor, too. (it has a map function)
   Λ→ : ∀ {X Y : Set} → (X → Y) → Λ X → Λ Y
   Λ→ f (var x)     = var (f x)
