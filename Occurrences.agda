@@ -14,6 +14,15 @@ data _∈_ {X : Set} (x : X) : Λ X → Set where
 _∉_ : ∀ {X : Set} (x : X) → Λ X → Set
 x ∉ t = ¬ (x ∈ t)
 
+_∈≡_ : ∀ {X} {x : X} {s t : Λ X} → x ∈ s → s ≡ t → x ∈ t
+occ ∈≡ refl = occ
+
+_∈→_ : ∀ {X Y} {x : X} {t : Λ X} → x ∈ t → (f : X → Y) → f x ∈ Λ→ f t
+here ∈→ f = here
+left occ t ∈→ f = left (occ ∈→ f) (Λ→ f t)
+right s occ ∈→ f = right (Λ→ f s) (occ ∈→ f)
+down occ ∈→ f = down (occ ∈→ ↑→ f)
+
 -- _≃[_]_ : ∀ {X Y : Set} → (X → Y) → Λ X → (X → Y) → Set
 -- f ≃[ t ] g = (∀ x → x ∈ t → f x ≡ g x)
 
@@ -77,6 +86,3 @@ notoccursΛ→ f y h (abs t0) (down occ) = notoccursΛ→ (↑→ f) (i y) h' t0
 
 o∉Λ→i : ∀ {X} (s : Λ X) → ¬ (o ∈ Λ→ i s)
 o∉Λ→i s = notoccursΛ→ i o (λ x → λ {()} ) s
-
-∈≡ : ∀ {X} {x : X} {s t : Λ X} → x ∈ s → s ≡ t → x ∈ t
-∈≡ occ refl = occ

@@ -19,18 +19,62 @@ dec↑ p o (i y) = inr (λ {()})
 dec↑ p (i x) o = inr (λ {()} )
 dec↑ p o o = inl refl
 
-decAt : ∀ (X : Set) → X → Set
-decAt X x = ∀ y → x ≡ y ⊔ ¬ (x ≡ y)
+decAt : ∀ {X : Set} → X → Set
+decAt x = ∀ y → x ≡ y ⊔ ¬ (x ≡ y)
 
-decAto : ∀ {X} → decAt (↑ X) o
-decAto (i x) = inr (λ {()})
-decAto o = inl refl
+decAto : ∀ {X : Set} → decAt {↑ X} o
+decAto {X} (i x) = inr (λ ())
+decAto {X} o = inl refl
 
-decAti : ∀ {X} x → decAt X x → decAt (↑ X) (i x)
+decAti : ∀ {X} (x : X) → decAt x → decAt (i x)
 decAti x p (i y) with p y
 ...                 | inl e = inl (ext i e)
 ...                 | inr n = inr λ {(refl) → n refl }
 decAti x p o = inr (λ {()})
+
+∈[∈] : ∀ {X} {x : X} {s : Λ X} → x ∈ s → (f : X → Λ X) → x ∈ f x → x ∈ (s [ f ])
+∈[∈] here f oc2 = oc2
+∈[∈] (left oc1 t) f oc2 = left (∈[∈] oc1 f oc2) (bind f t)
+∈[∈] (right s oc1) f oc2 = right (bind f s) (∈[∈] oc1 f oc2)
+∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i))
+
+update : ∀ {X Y : Set} (f : X → Λ Y) {x : X} (d : decAt x) (t : Λ Y) → X → Λ Y
+update f d t y with d y
+... | inl x=y = t
+... | inr x≠y = f y
+
+bind-rec : ∀ {X Y : Set} (A : Λ X) (f : X → Λ Y) {x : X}
+             → decAt x → x ∈ A → (A [ f ] ≡ f x) → A ≡ var x
+bind-rec A f {x} d occ p with f x in fx
+bind-rec A f {x} d occ p | var y with A | p
+bind-rec A f {.z} d here p | var y | var z | q = refl
+bind-rec (var x) f {x} d here p | app t1 t2 = refl
+bind-rec (app s t) f {x} d (left  occ t) p | app t1 t2 with app≡inv p
+... | (p1 , p2) with d x in dx
+... | inr g = exfalso (g refl)
+... | inl refl = {!   !}
+  -- let g0 = λ y → case (λ _ → app (var y) t ) (λ _ → var y)
+  --     g = λ y → g0 y (d y)
+  --     f' = update f d t1
+  --     A' = s [ g ]
+  --     occ' = ∈[∈] occ g (left here t ∈≡ (~ ext (g0 x) refl ) )
+  --     br = bind-rec A' f' {x} d occ' {!   !}
+  --  in {!   !}
+-- with g0 ← (λ y → case (λ _ → app (var y) t) (λ _ → var y))
+--                with g ← (λ y → g0 y (d y))
+--                with A' ← s [ g ]
+--                with g0 x (inl refl)  | g x in gx
+-- ... | u | q with occ' ← ∈[∈] occ g (left here t ∈≡ {!   !} )
+--   = {!   !}
+--                -- with br ← bind-rec A' f {x} d occ' {!   !}
+--                with occ' ← ∈[∈] occ g (left here t ∈≡ {!   !} )
+--                with br ← bind-rec (s [ g ]) f d occ' {!   !}
+--                with s | occ
+-- ... | var y | here = {! br   !}
+  -- with occ' ← ∈[∈] occ g (left here t ∈≡ {!   !}  ) = {!   !}
+-- bind-rec (s [ g) ]) g {x} (right s occ) f {x} d oc' p = {!   !}
+bind-rec .(app s _) f {x} d (right s occ) p | app t1 t2 = {!   !}
+bind-rec A f {x} d occ p | abs t0 = {!   !}
 
 occurs-map : ∀ {X} (A : Λ (↑ X)) (B : Λ X) → A [ B ]ₒ ≡ B → ¬ (o ∈ A) → A ≡ Λ→ i B
 occurs-map A B h nocc =
@@ -40,28 +84,29 @@ occurs-map A B h nocc =
       e2 = bind-occurs (var) (Λ→ i ∘ io var B) A e0
    in (~ bind-unit1 A) !  (e2 ! (e1 A ! ext (Λ→ i) h))
 
-lercherEq3gen : ∀ {X Y} (A : Λ X) (f : X → Λ X) (x : X) (d : decAt X x) → (A [ f ] ≡ f x) → A ≡ var x ⊔ x ∉ A
-lercherEq3gen (var y) f x d p with d y
-... | inl yes  = inl (var≡ (~ yes) )
-... | inr no   = inr (λ {  here → no refl })
-lercherEq3gen (app A1 A2) f x d p with f x in p0
-... | (app t1 t2) with app≡inv p | p0
-... | (p1 , p2) | p3 = {!   !}
-lercherEq3gen (abs A0) f x d p = {!   !}
+decTop : ∀ {X} (A : Λ (↑ X)) → A ≡ var o ⊔ ¬ (A ≡ var o)
+decTop (var (i x)) = inr (λ { () })
+decTop (var o) = inl refl
+decTop (app A1 A2) = inr (λ { () })
+decTop (abs A0) = inr (λ { () })
 
-lercherEq3 : ∀ {X} (A : Λ X) (B : Λ (↑ X)) → B [ A ]ₒ ≡ A → B ≡ var o ⊔ B ≡ Λ→ i A
-lercherEq3 A B e = {!   !}
+lercherEq3 : ∀ {X} (A : Λ (↑ X)) (B : Λ X) → A [ B ]ₒ ≡ B → A ≡ var o ⊔ A ≡ Λ→ i B
+lercherEq3 A B e with decTop A
+... | inl yes = inl yes
+... | inr no  = inr (occurs-map A B e o∉A)
+  where o∉A = λ occ → no (bind-rec A (io var B) decAto occ e)
+
 
 lercherEq2gen : ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var o
-lercherEq2gen (var (i x)) A2 f fn p with ~ (fn x (∈≡ (down (left here A2)) (~ p))) ! p
+lercherEq2gen (var (i x)) A2 f fn p with ~ (fn x (down (left here A2) ∈≡ (~ p))) ! p
 ... | ()
 lercherEq2gen (var o) A2 f fn p = refl
 lercherEq2gen (abs (var (i (i x)))) A2 f fn p with abs≡inv p
-... | M with  fn x (occIni (f (i x)) (∈≡ (left (down here) A2) (~ M)))
+... | M with  fn x (occIni (f (i x)) (left (down here) A2 ∈≡ (~ M)))
 ... | t with ~ (ext (Λ→ i) t) ! M
 ... | ()
 lercherEq2gen (abs (var (i o))) A2 f fn p with abs≡inv p
-...   | M = exfalso (o∉Λ→i (f o) (∈≡ (left (down here) A2) (~ M)))
+...   | M = exfalso (o∉Λ→i (f o) (left (down here) A2 ∈≡ (~ M)))
 lercherEq2gen (abs (app A1 A3)) A2 f fn p with app≡inv (abs≡inv p)
 ...         | (p1 , p2) = let g = lift f
                               gn = λ {o → λ q → exfalso (o∉Λ→i (f o) q); (i x) → λ q → ext (Λ→ i) (fn x (occIni (f (i x)) q))}
@@ -76,18 +121,26 @@ lercherHelper : ∀ (P1 P2 : Λ (↑ ⊥)) (Q : Λ ⊥) → P1 ≡ var o → P2 
 lercherHelper .(var o) .(var o) Q refl (inl refl) p3 = refl , _×_.fst (app≡inv p3)
 lercherHelper .(var o) .(Λ→ i Q) Q refl (inr refl) p3 =
   let qPrf = _×_.fst (app≡inv p3)
-  in exfalso {!   !}
+      A = abs (app (var o) (var (i o)))
+      br = bind-rec A (io var Q) {o} decAto (down (right (var o) here) ) (~ qPrf)
+      contra : ∀ r → abs r ≡ var o → ⊥
+      contra = λ { r () }
+  in exfalso (contra _ br)
 
 lercher : ∀ (P : Λ (↑ ⊥)) (Q : Λ ⊥) → P [ Q ]ₒ ≡ app (abs P) Q → abs P ≡ ω × Q ≡ ω
 lercher (var (i x)) q prf = exfalso x
 lercher (var o) q prf with prf
-... | p = {!   !}
+... | p =
+  let A = app (abs (var o)) (var o)
+      br = bind-rec A (io var q) {o} decAto (right (abs (var o)) here) (~ p)
+      contra : ∀ {r1 r2} → app r1 r2 ≡ var o → ⊥
+      contra = λ { () }
+      in exfalso (contra br)
 lercher (app P1 P2) Q prf =
    let (lhs , rhs) = app≡inv prf
        l1 = lercherEq2 _ _ _ lhs
-       l2 = lercherEq3 Q P2 rhs
+       l2 = lercherEq3 P2 Q rhs
    in lercherHelper _ _ _ l1 l2 prf
-
 
 
 
