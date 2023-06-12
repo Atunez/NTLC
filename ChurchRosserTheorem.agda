@@ -42,21 +42,21 @@ dp⇉ {X} {app M₀ M₁} {app N₀ N₁} (app⇉ ρ₀ ρ₁) (app⇉ σ₀ σ�
 dp⇉ {X} {app (abs M₀) M₁} {app (abs N₀) N₁} (app⇉ (abs⇉ ρ₀) ρ₁) (red⇉ σ₀ σ₁) =
   let (conf Z₁ l₁ r₁) = dp⇉ ρ₁ σ₁
       (conf Z₀ l₀ r₀) = dp⇉ ρ₀ σ₀
-      Z = Z₀ [ Z₁ ]
+      Z = Z₀ [ Z₁ ]ₒ
       l = red⇉ l₀ l₁
       r = ⇉-subst r₀ r₁
   in  conf Z l r
 dp⇉ (red⇉ ρ₀ ρ₁) (app⇉ (abs⇉ σ₀) σ₁) = 
   let (conf Z₁ l₁ r₁) = dp⇉ σ₁ ρ₁
       (conf Z₀ l₀ r₀) = dp⇉ σ₀ ρ₀
-      Z = Z₀ [ Z₁ ]
+      Z = Z₀ [ Z₁ ]ₒ
       l = red⇉ l₀ l₁
       r = ⇉-subst r₀ r₁
   in conf Z r l
 dp⇉ (red⇉ ρ₀ ρ₁) (red⇉ σ₀ σ₁) = 
   let (conf Z₁ l₁ r₁) = dp⇉ σ₁ ρ₁
       (conf Z₀ l₀ r₀) = dp⇉ σ₀ ρ₀
-      Z = Z₀ [ Z₁ ]
+      Z = Z₀ [ Z₁ ]ₒ
       l = ⇉-subst r₀ r₁
       r = ⇉-subst l₀ l₁
   in conf Z l r
@@ -101,7 +101,7 @@ appred (ε* _) (ε* _) = (ε* _)
 appred (ε* _) (c* x input2) = c* (appR→ x) (appred (ε* _) input2)
 appred (c* x input1) input2 = c* (appL→ x) (appred input1 input2)
 
-redred : ∀ {X : Set} {M M' : Λ (↑ X)} {N N' : Λ X} → M ⇒ M' → N ⇒ N' → app (abs M) N ⇒ M' [ N' ]
+redred : ∀ {X : Set} {M M' : Λ (↑ X)} {N N' : Λ X} → M ⇒ M' → N ⇒ N' → app (abs M) N ⇒ M' [ N' ]ₒ
 redred (ε* _) (ε* _) = c* (redex _ _) (ε* _)
 redred (ε* _) (c* x input2) = c* (appR→ x) (redred (ε* _) input2)
 redred (c* x input1) input2 = c* (appL→ (abs→ x)) (redred input1 input2)

@@ -3,7 +3,7 @@ module Standarization where
 open import Lambda
 
 data _→w_ {X : Set} : Rel (Λ X) where
-  ε→w : ∀ {M N}  → app (abs M) N →w (M [ N ])
+  ε→w : ∀ {M N}  → app (abs M) N →w (M [ N ]ₒ)
   _c→w_ : ∀ {M N} (Z : Λ X) → M →w N → app M Z →w app N Z
 
 data _→s_ {X : Set} : Rel (Λ X) where
@@ -27,18 +27,21 @@ wtos (Z c→w red) = app→s (wtos red) (refl→s Z)
 ≡→w :  ∀ {X : Set}  {M N N' : Λ X} → M →w N → N ≡ N' → M →w N'
 ≡→w = ≡R {R = _→w_}
 
-i→w : ∀ {X : Set} {x y : Λ X} → x →w y → Λ↑ (i x) →w Λ↑ (i y)
+i→w : ∀ {X : Set} {x y : Λ X} → x →w y → Λ→i x →w Λ→i y
 i→w {X} {(app (abs M) N)} {.(bind (io var N) M)} ε→w = ≡→w (ε→w) 
    ((~ bind-nat2 (↑→ i) (io var (Λ→ i N)) M) !
-   ((~ ext≃ (bind-ext (io-var-nat i N)) (refl {a = M})) 
+   ((~ ext≃ (bind-ext λ {o → refl; (i x) → refl}) (refl {a = M})) 
    ! (~ bind-nat1 i (io var N) M)))
 i→w (Z c→w red) = Λ→ (λ z → i z) Z c→w i→w red
-      
+
+
 Λ→→w : ∀ {X Y : Set} {x y : Λ (↑ X)} (f : (↑ X) → Y) → x →w y → Λ→ f x →w Λ→ f y
 Λ→→w {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} f ε→w = ≡→w ε→w 
-  (~ (bind-nat1 f (io var N) M ! (ext≃ (bind-ext (io-var-nat f N)) (refl {a = M}) 
+  (~ (bind-nat1 f (io var N) M ! (ext≃ (bind-ext λ {o → refl; (i (i x)) → refl
+                                                            ; (i o) → refl}) (refl {a = M}) 
   ! bind-nat2 (↑→ f) (io var (Λ→ f N)) M)))
 Λ→→w {X} {Y} {.(app _ Z)} {.(app _ Z)} f (Z c→w red) = Λ→ f Z c→w Λ→→w f red
+
 
 Λ→→s : ∀ {X Y : Set} {x y : Λ (↑ X)} (f : (↑ X) → Y) → x →s y → Λ→ f x →s Λ→ f y
 Λ→→s f ε→s = ε→s
@@ -46,17 +49,19 @@ i→w (Z c→w red) = Λ→ (λ z → i z) Z c→w i→w red
 Λ→→s f (abs→s red) = abs→s (Λ→→s (↑→ f) red)
 Λ→→s f (append→s x red) = append→s (Λ→→w f x) (Λ→→s f red)
 
-i→s : ∀ {X : Set} {x y : Λ X} → x →s y → Λ↑ (i x) →s Λ↑ (i y)
+
+i→s : ∀ {X : Set} {x y : Λ X} → x →s y → Λ→i x →s Λ→i y
 i→s ε→s = ε→s
 i→s (app→s red red₁) = app→s (i→s red) (i→s red₁)
 i→s (abs→s red) = abs→s (Λ→→s (↑→ i) red)
 i→s (append→s x red) = append→s (i→w x) (i→s red)
 
+
 bind→wsubst : ∀ {X Y : Set} {M1 M2 : Λ X} {f : X → Λ Y} → M1 →w M2 → bind f M1 →w bind f M2
 bind→wsubst {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} {f} ε→w = ≡→w ε→w 
-  ((((~ bind-law (Λ↑ ∘ ↑→ f) (io var (bind f N)) M) ! 
+  ((((~ bind-law (lift f) (io var (bind f N)) M) ! 
   bind-ext (λ { (i x) → (~ bind-nat2 i (io var (bind f N)) (f x)) 
-  ! buildproofv2 (f x) ; o → refl}) M) ! bind-law (io var N) f M))
+  ! bind-unit1 (f x) ; o → refl}) M) ! bind-law (io var N) f M))
 bind→wsubst (Z c→w red) = bind _ Z c→w bind→wsubst red
 
 bind→ssubst : ∀ {X Y : Set} {M1 M2 : Λ X} → M1 →s M2
@@ -68,10 +73,10 @@ bind→ssubst (app→s red red₁) prf = app→s (bind→ssubst red prf) (bind�
 bind→ssubst (abs→s red) prf = abs→s (bind→ssubst red λ { (i x) → i→s (prf x) ; o → ε→s })
 bind→ssubst (append→s x red) prf = append→s (≡→w (bind→wsubst x) refl) (bind→ssubst red prf)
 
-redsubst→s : ∀ {X : Set}  {M M' : Λ X} (N : Λ (↑ X)) → M →s M' → N [ M ] →s N [ M' ]
+redsubst→s : ∀ {X : Set}  {M M' : Λ X} (N : Λ (↑ X)) → M →s M' → N [ M ]ₒ →s N [ M' ]ₒ
 redsubst→s N red = bind→ssubst (refl→s N) λ {(i x) → ε→s ; o → red}
 
-subst→s : ∀ {X : Set}  {N N' : Λ X} {M M' : Λ (↑ X)} → M →s M' → N →s N' → M [ N ] →s M' [ N' ]
+subst→s : ∀ {X : Set}  {N N' : Λ X} {M M' : Λ (↑ X)} → M →s M' → N →s N' → M [ N ]ₒ →s M' [ N' ]ₒ
 subst→s red red2 = bind→ssubst red λ { (i x) -> ε→s ; o -> red2 } 
 
 -- Checker Problems workaround.
@@ -91,7 +96,7 @@ data lenOf {X : Set} : ∀ {M M' : Λ X} → M →s M' → Nat → Set where
           → lenOf r m → lenOf (append→s x r) (S m)
 
 specialcasetranssw : ∀ {X : Set} {N M : Λ X} {M' : Λ (↑ X)} (r : M →s app (abs M') N)
-                       → (n : Nat) → lenOf r n → M →s M' [ N ]
+                       → (n : Nat) → lenOf r n → M →s M' [ N ]ₒ
 specialcasetranssw .(app→s (abs→s r0) r1) .n (lenApp (abs→s r0) r1 O n prf prf₁) =
  append→s ε→w (subst→s r0 r1)
 specialcasetranssw .(app→s (abs→s r0) r1) .(S (m ++ n)) 

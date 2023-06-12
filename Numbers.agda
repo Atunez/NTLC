@@ -1,6 +1,6 @@
 module Numbers where
 
-open import Equality
+open import BasicLogic
 
 data Nat : Set where
     O : Nat
@@ -66,8 +66,8 @@ data _≤_ : Nat → Nat → Set where
   O≤ : ∀ {n} → O ≤ n
   S≤ : ∀ {n m} → n ≤ m → S n ≤ S m
 
-≡≤ : ∀ {k l m} → k ≡ l → l ≤ m → k ≤ m
-≡≤ refl le = le
+_≡≤_ : ∀ {l m n} → l ≡ m → m ≤ n → l ≤ n
+refl ≡≤ p = p
 
 lelte : ∀ {m n l : Nat} → n < m → m ≤ l → n ≤ l
 lelte (O< n) q = O≤
@@ -80,12 +80,13 @@ ltele (S< n m p) (S≤ q) = S< n _ (ltele p q)
 ≤-eq : ∀ {m n l : Nat} → n ≤ m → m ≡ l → n ≤ l
 ≤-eq p refl = p
 
-≤S : ∀ (n : Nat) → n ≤ n
-≤S O = O≤
-≤S (S n) = S≤ (≤S n)
+≤refl : ∀ (n : Nat) → n ≤ n
+≤refl O = O≤
+≤refl (S n) = S≤ (≤refl n)
 
-≤≡ : ∀ {m n : Nat} → m ≡ n → m ≤ n
-≤≡ refl = ≤S _
+≤S : ∀ {n m : Nat} → n ≤ m → n ≤ S m
+≤S O≤ = O≤
+≤S (S≤ nm) = S≤ (≤S nm)
 
 ≤++ : ∀ {n m n' m'} → n ≤ m → n' ≤ m' → (n ++ n') ≤ (m ++ m')
 ≤++ O≤ O≤ = O≤
@@ -96,10 +97,10 @@ lestrict : ∀ {m} {n} → m < n → n ≤ m → ⊥
 lestrict mn nm = <-irrefl _ (ltele mn nm )
 
 ++≤ : ∀ {m n s} → (m ++ n) ≤ s → (n ++ m) ≤ s
-++≤ {m} {n} p = ≡≤ (comm++ n m) p
+++≤ {m} {n} p = (comm++ n m) ≡≤ p
 
 ++S≤ : ∀ {m n s} → S (m ++ n) ≤ s → S (n ++ m) ≤ s
-++S≤ {m} {n} (S≤ p) = S≤ (≡≤ (comm++ n m) p)  
+++S≤ {m} {n} (S≤ p) = S≤ ((comm++ n m) ≡≤ p)  
 
 numbersDontAdd : ∀ {m n} → m ≡ n → m ≡ S (S n) → ⊥
 numbersDontAdd refl ()
@@ -112,4 +113,41 @@ lemmaNum O q = O< (S q)
 lemmaNum (S m) q = S< m (S (S (m ++ q))) (lemmaNum m q)
 
 numbersDontAdd2 : ∀ (m n q : Nat) → m ≡ n → m ≡ S (S (n ++ q)) → ⊥
-numbersDontAdd2 m n q refl o = lestrict (lemmaNum _ _) (≤≡ (~ o))
+numbersDontAdd2 m n q refl o = lestrict (lemmaNum _ _) ((~ o) ≡≤ ≤refl m)
+
+
+_≡+≡_ : ∀ {m1 m2 n1 n2} → m1 ≡ m2 → n1 ≡ n2 → m1 ++ n1 ≡ m2 ++ n2
+refl ≡+≡ refl = refl
+
+zero≤ : ∀ {m : Nat} → O ≤ m
+zero≤ {m} = O≤
+
+tran≤ : ∀ {l m n : Nat} → l ≤ m → m ≤ n → l ≤ n
+tran≤ O≤ mn = O≤
+tran≤ (S≤ lm) (S≤ mn) = S≤ (tran≤ lm mn)
+
+
+¬S≤ : ∀ {m : Nat} → ¬ (S m ≤ m)
+¬S≤ {S m} (S≤ le) = ¬S≤ le 
+
+asym≤ : ∀ {m n : Nat} → m ≤ n → n ≤ m → m ≡ n
+asym≤ O≤ O≤ = refl
+asym≤ (S≤ mn) (S≤ nm) = ext S (asym≤ mn nm)
+
+_≤≡_ : ∀ {l m n} → l ≤ m → m ≡ n → l ≤ n
+p ≤≡ refl = p
+
+
+_≤+≤_ : ∀ {m1 m2 n1 n2} → m1 ≤ m2 → n1 ≤ n2 → (m1 ++ n1) ≤ (m2 ++ n2)
+O≤ ≤+≤ O≤ = O≤
+S≤ p1 ≤+≤ O≤ = S≤ (p1 ≤+≤ O≤)
+O≤ ≤+≤ S≤ p2 = S≤  (O≤ ≤+≤ p2) ≤≡ (~ S++ _ _)
+S≤ p1 ≤+≤ S≤ p2 = S≤ (p1 ≤+≤ S≤ p2)
+
+++≤L : ∀ l m → l ≤ (l ++ m)
+++≤L O m = O≤
+++≤L (S l) m = S≤ (++≤L l m)
+
+++≤R : ∀ l m → m ≤ (l ++ m)
+++≤R l O = O≤
+++≤R l (S m) = S≤ (++≤L m l) ≤≡ comm++ (S m) l 
