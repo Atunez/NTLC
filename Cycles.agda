@@ -78,22 +78,3 @@ lercher (app P1 P2) Q prf =
        l2 = lercherEq3 P2 Q rhs
    in lercherHelper _ _ _ l1 l2 prf
 
--- update : ∀ {X Y : Set} (f : X → Y) {x : X} (d : decAt x) (t : Y) → X → Y
--- update f d t y with d y
--- ... | inl x=y = t
--- ... | inr x≠y = f y
---
--- ¬app≡L : ∀ {X} (M N : Λ X) → ¬ (app M N ≡ M)
--- ¬app≡L M N ()
---
--- ¬app≡R : ∀ {X} (M N : Λ X) → ¬ (app M N ≡ N)
--- ¬app≡R M N ()
---
--- ¬absLemma : ∀ {X} (M : Λ (↑ X)) (f : X → ↑ X) → isInj f → Λ→ f (abs M) ≡ M → ∀ x → x ∉ M
--- ¬absLemma (abs M) f fi p x (down occ) with abs≡inv p
--- ... | q = ¬absLemma M (↑→ f) (↑→Inj f fi) q (i x) occ
---
--- ¬abs≡ : ∀ {X} (M : Λ (↑ X)) → ¬ (Λ→i (abs M) ≡ M)
--- ¬abs≡ (abs M) p with abs≡inv p
--- ... | q = ¬abs≡ M (abs≡ (map-occurs (↑→ i) (↑→ (↑→ i)) M eq) ! q)
---           where eq = (λ x xinM → exfalso (¬absLemma M (↑→ i) (↑→Inj i iInj ) q x xinM ) )
