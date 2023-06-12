@@ -1,106 +1,17 @@
 module Cycles where
 
 open import Lambda public
-
-dec : Set → Set
-dec A = ∀ (x y : A) → x ≡ y ⊔ ¬ (x ≡ y)
-
-dec⊥ : dec ⊥
-dec⊥ () y
-
-dec⊤ : dec ⊤
-dec⊤ tt tt = inl refl
-
-dec↑ : ∀ {X} → dec X → dec (↑ X)
-dec↑ p (i x) (i y) with p x y
-...                   | inl q = inl (ext i q)
-...                   | inr q = inr (λ {refl → q refl } )
-dec↑ p o (i y) = inr (λ {()})
-dec↑ p (i x) o = inr (λ {()} )
-dec↑ p o o = inl refl
-
-decAt : ∀ {X : Set} → X → Set
-decAt x = ∀ y → x ≡ y ⊔ ¬ (x ≡ y)
-
-decAto : ∀ {X : Set} → decAt {↑ X} o
-decAto {X} (i x) = inr (λ ())
-decAto {X} o = inl refl
-
-decAti : ∀ {X} (x : X) → decAt x → decAt (i x)
-decAti x p (i y) with p y
-...                 | inl e = inl (ext i e)
-...                 | inr n = inr λ {(refl) → n refl }
-decAti x p o = inr (λ {()})
-
-∈[∈] : ∀ {X} {x : X} {s : Λ X} → x ∈ s → (f : X → Λ X) → x ∈ f x → x ∈ (s [ f ])
-∈[∈] here f oc2 = oc2
-∈[∈] (left oc1 t) f oc2 = left (∈[∈] oc1 f oc2) (bind f t)
-∈[∈] (right s oc1) f oc2 = right (bind f s) (∈[∈] oc1 f oc2)
-∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i))
-
-update : ∀ {X Y : Set} (f : X → Λ Y) {x : X} (d : decAt x) (t : Λ Y) → X → Λ Y
-update f d t y with d y
-... | inl x=y = t
-... | inr x≠y = f y
-
-bind-recNoLen : ∀ {X Y : Set} (A : Λ X) (f : X → Λ Y) {x : X}
-             → decAt x → x ∈ A → (A [ f ] ≡ f x) → A ≡ var x
-bind-recNoLen A f d occ p = {!   !}
--- bind-rec (var y) f d here p = refl
--- bind-rec (app (var x₁) N) f {x} d (left occ .N) p = {!   !}
--- bind-rec (app (app M M₁) N) f {x} d (left occ .N) p with f x in fx
--- ... | app Q Q₁ with app≡inv p
--- ... | refl , refl = {! Q  !}
--- bind-rec (app (abs M) N) f {x} d (left (down occ) .N) p with f x in fx
--- ... | app Q Q₁ with app≡inv p
--- ... | refl , refl with d x in dx
--- ... | inl x₁ = let rec = bind-rec (abs M) f d (down occ) {!   !} 
---                in {!  rec !}
--- ... | inr x₁ = exfalso (x₁ refl)
--- bind-rec (app M N) f d (right .M occ) p = {!   !}
--- bind-rec (abs R) f {x} d (down occ) p with f x in fx
--- ... | abs M with abs≡inv p
--- ... | N = let rec = bind-rec R (lift f) (decAti x d) occ (N ! {!   !})
---           in exfalso {! occ  !}
--- bind-rec A f {x} d occ p with f x in fx
--- bind-rec A f {x} d occ p | var y with A | p
--- bind-rec A f {.z} d here p | var y | var z | q = refl
--- bind-rec (var x) f {x} d here p | app t1 t2 = refl
--- bind-rec (app s t) f {x} d (left  occ t) p | app t1 t2 with app≡inv p
--- ... | (p1 , p2) with d x in dx
--- ... | inr g = exfalso (g refl)
--- ... | inl refl = 
---   let g0 = λ y → case (λ q → app (var y) t ) (λ q → var y)
---       g = λ y → g0 y (d y)
---       f' = update f d t1
---       A' = s [ g ]
---       occ' = ∈[∈] occ g (left here t ∈≡ (~ ext (g0 x) refl ) )
---       br = bind-rec A' f' {x} d occ' {!   !}
---    in {!   !}
--- -- with g0 ← (λ y → case (λ _ → app (var y) t) (λ _ → var y))
--- --                with g ← (λ y → g0 y (d y))
--- --                with A' ← s [ g ]
--- --                with g0 x (inl refl)  | g x in gx
--- -- ... | u | q with occ' ← ∈[∈] occ g (left here t ∈≡ {!   !} )
--- --   = {!   !}
--- --                -- with br ← bind-rec A' f {x} d occ' {!   !}
--- --                with occ' ← ∈[∈] occ g (left here t ∈≡ {!   !} )
--- --                with br ← bind-rec (s [ g ]) f d occ' {!   !}
--- --                with s | occ
--- -- ... | var y | here = {! br   !}
---   -- with occ' ← ∈[∈] occ g (left here t ∈≡ {!   !}  ) = {!   !}
--- -- bind-rec (s [ g) ]) g {x} (right s occ) f {x} d oc' p = {!   !}
--- bind-rec .(app s _) f {x} d (right s occ) p | app t1 t2 = {!   !}
--- bind-rec A f {x} d occ p | abs t0 = {!   !}
+open import Length
 
 bind-rec : ∀ {X Y : Set} (A : Λ X) (f : X → Λ Y) {x : X}
-             → decAt x → x ∈ A → (A [ f ] ≡ f x) → A ≡ var x
-bind-rec (var x) f d here p = refl
-bind-rec (app A A₁) f {x} d occ p with f x
-... | app P P₁ = {!   !}
-bind-rec (abs A) f {x} d (down occ) p with f x
-... | abs P with abs≡inv p
-bind-rec (abs A) f {x} d (down occ) refl | abs .(bind (lift f) A) | refl = {!   !}
+             → x ∈ A → (A [ f ] ≡ f x) → A ≡ var x
+bind-rec (var x) f here eq = refl
+bind-rec (app A1 A2) f (left occ .A2)  eq = exfalso (¬S≤ {len (A1 [ f ]) ++ len (A2 [ f ])}
+               (ext len eq ≡≤ tran≤ (len∈bind f A1 occ) (++≤L _ _) ) )
+bind-rec (app A1 A2) f (right .A1 occ) eq = exfalso (¬S≤ {len (A1 [ f ]) ++ len (A2 [ f ])}
+               (ext len eq ≡≤ tran≤ (len∈bind f A2 occ) (++≤R _ _) ) )
+bind-rec (abs A0) f (down occ) eq = exfalso (¬S≤ {len (bind (lift f) A0)}
+               (ext len eq ≡≤ ((~ (len→ i (f _) )) ≡≤ len∈bind (lift f) A0 occ) ))
 
 occurs-map : ∀ {X} (A : Λ (↑ X)) (B : Λ X) → A [ B ]ₒ ≡ B → ¬ (o ∈ A) → A ≡ Λ→ i B
 occurs-map A B h nocc =
@@ -120,8 +31,7 @@ lercherEq3 : ∀ {X} (A : Λ (↑ X)) (B : Λ X) → A [ B ]ₒ ≡ B → A ≡ 
 lercherEq3 A B e with decTop A
 ... | inl yes = inl yes
 ... | inr no  = inr (occurs-map A B e o∉A)
-  where o∉A = λ occ → no (bind-rec A (io var B) decAto occ e)
-
+  where o∉A = λ occ → no (bind-rec A (io var B) occ e)
 
 lercherEq2gen : ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var o
 lercherEq2gen (var (i x)) A2 f fn p with ~ (fn x (down (left here A2) ∈≡ (~ p))) ! p
@@ -148,7 +58,7 @@ lercherHelper .(var o) .(var o) Q refl (inl refl) p3 = refl , _×_.fst (app≡in
 lercherHelper .(var o) .(Λ→ i Q) Q refl (inr refl) p3 =
   let qPrf = _×_.fst (app≡inv p3)
       A = abs (app (var o) (var (i o)))
-      br = bind-rec A (io var Q) {o} decAto (down (right (var o) here) ) (~ qPrf)
+      br = bind-rec A (io var Q) {o} (down (right (var o) here) ) (~ qPrf)
       contra : ∀ r → abs r ≡ var o → ⊥
       contra = λ { r () }
   in exfalso (contra _ br)
@@ -158,7 +68,7 @@ lercher (var (i x)) q prf = exfalso x
 lercher (var o) q prf with prf
 ... | p =
   let A = app (abs (var o)) (var o)
-      br = bind-rec A (io var q) {o} decAto (right (abs (var o)) here) (~ p)
+      br = bind-rec A (io var q) {o} (right (abs (var o)) here) (~ p)
       contra : ∀ {r1 r2} → app r1 r2 ≡ var o → ⊥
       contra = λ { () }
       in exfalso (contra br)
@@ -168,25 +78,22 @@ lercher (app P1 P2) Q prf =
        l2 = lercherEq3 P2 Q rhs
    in lercherHelper _ _ _ l1 l2 prf
 
-
-
--- module CycleStuff where
-
-
---   data pre2cycle {X : Set} : Λ X → Set where
---     red2 : ∀ (P : Λ (↑ X)) (Q : Λ X) → (P [ Q ] ⟶ app (abs P) Q) → pre2cycle (app (abs P) Q)
-
---   -- data CycleEnum : Set where
---   --   case1 :
-
---   Qterm : ∀ {X} → Λ X
---   Qterm = Λ→ ex_falso (abs (abs (app (app (var o) (var (i o))) (var o))))
-
---   -- Qcyc : ∀ {X} → ∀ (P : Λ X) → pre2cycle (app (abs (app (app (var o) (Λ→ i P)) (var o))) (Qterm {X}))
---   -- Qcyc P = red2 (app (app (var o) (Λ→ i P)) (var o)) Qterm (appL→
---   --     (⟶≡ (redex (abs (app (app (var o) (var (i o))) (var o)))
---   --           (bind (io var (abs (abs (app (app (var o) (var (i o))) (var o)))))  (Λ→ i P)) )
---   --         {! bind-ext ? ? (abs (app (app (var o) (var (i o))) (var o)))  !} ) )
-
---             -- bind-ext : ∀ {X Y : Set} {f g : X → Λ Y} → f ≃ g → bind f ≃ bind g
- 
+-- update : ∀ {X Y : Set} (f : X → Y) {x : X} (d : decAt x) (t : Y) → X → Y
+-- update f d t y with d y
+-- ... | inl x=y = t
+-- ... | inr x≠y = f y
+--
+-- ¬app≡L : ∀ {X} (M N : Λ X) → ¬ (app M N ≡ M)
+-- ¬app≡L M N ()
+--
+-- ¬app≡R : ∀ {X} (M N : Λ X) → ¬ (app M N ≡ N)
+-- ¬app≡R M N ()
+--
+-- ¬absLemma : ∀ {X} (M : Λ (↑ X)) (f : X → ↑ X) → isInj f → Λ→ f (abs M) ≡ M → ∀ x → x ∉ M
+-- ¬absLemma (abs M) f fi p x (down occ) with abs≡inv p
+-- ... | q = ¬absLemma M (↑→ f) (↑→Inj f fi) q (i x) occ
+--
+-- ¬abs≡ : ∀ {X} (M : Λ (↑ X)) → ¬ (Λ→i (abs M) ≡ M)
+-- ¬abs≡ (abs M) p with abs≡inv p
+-- ... | q = ¬abs≡ M (abs≡ (map-occurs (↑→ i) (↑→ (↑→ i)) M eq) ! q)
+--           where eq = (λ x xinM → exfalso (¬absLemma M (↑→ i) (↑→Inj i iInj ) q x xinM ) )
