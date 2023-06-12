@@ -9,11 +9,13 @@ open import Lambda public
 I : ∀ {X} → Λ X
 I = abs (var o)
 
-PA1 : ∀ (P : Λ (↑ ⊥)) (Q : Λ ⊥) → app (app I (abs P)) Q ⟶ app (abs P) Q → P [ Q ]ₒ ≡ app (app I (abs P)) Q  → ⊥
-PA1 (var (i x)) Q r1 r2 = x
+PA1 : ∀ {X} (P : Λ (↑ X)) (Q : Λ X) → app (app I (abs P)) Q ⟶ app (abs P) Q → P [ Q ]ₒ ≡ app (app I (abs P)) Q  → ⊥
+PA1 (var (i x)) Q r1 ()
 PA1 (var o) Q r1 ()
 PA1 (app P1 P2) Q (appL→ (redex .(var o) .(abs (app P1 P2)))) r2 with app≡inv r2
-... | (p1 , p2) = {!   !} 
+PA1 (app (var x) P2) Q (appL→ (redex .(var o) .(abs (app (var x) P2)))) r2 | p1 , p2 = {!   !}
+PA1 (app (app P1 P3) P2) Q (appL→ (redex .(var o) .(abs (app (app P1 P3) P2)))) r2 | p1 , p2 with app≡inv p1
+... | (p11 , p12) = {!   !}
 
 -- If you walk along the following path:
 -- M≡(\x.\y.L[x,y])PQ → (\y.L[P,y])Q → L[P,Q]≡M
