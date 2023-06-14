@@ -151,3 +151,6 @@ S≤ p1 ≤+≤ S≤ p2 = S≤ (p1 ≤+≤ S≤ p2)
 ++≤R : ∀ l m → m ≤ (l ++ m)
 ++≤R l O = O≤
 ++≤R l (S m) = S≤ (++≤L m l) ≤≡ comm++ (S m) l 
+
+¬S4 : ∀ {m n} → m ≡ n → m ≡ S (S (S (S n))) → ⊥
+¬S4 refl () 

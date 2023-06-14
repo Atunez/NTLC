@@ -85,8 +85,12 @@ notoccursΛ→ f y h (abs t0) (down occ) = notoccursΛ→ (↑→ f) (i y) h' t0
 o∉Λ→i : ∀ {X} (s : Λ X) → ¬ (o ∈ Λ→ i s)
 o∉Λ→i s = notoccursΛ→ i o (λ x → λ {()} ) s
 
+var∈≡ : ∀ {X} (M : Λ X) (x : X) → M ≡ var x → x ∈ M
+var∈≡ M x refl = here
+
 ∈[∈] : ∀ {X} {x : X} {s : Λ X} → x ∈ s → (f : X → Λ X) → x ∈ f x → x ∈ (s [ f ])
 ∈[∈] here f oc2 = oc2
 ∈[∈] (left oc1 t) f oc2 = left (∈[∈] oc1 f oc2) (bind f t)
 ∈[∈] (right s oc1) f oc2 = right (bind f s) (∈[∈] oc1 f oc2)
 ∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i))
+

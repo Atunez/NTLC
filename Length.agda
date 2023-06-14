@@ -18,3 +18,7 @@ len∈bind f (app s t) (left occ t) = ≤S (tran≤ (len∈bind f s occ) (++≤L
 len∈bind f (app s t) (right s occ) = ≤S (tran≤ (len∈bind f t occ) (++≤R (len (bind f s)) (len (bind f t)) ) )
 len∈bind f (abs r) (down occ) = ≤S ((~ (len→ i (f _))) ≡≤ len∈bind (lift f) r occ)
  
+
+ 
+len≡≠ : ∀ {X} (M N : Λ X) → M ≡ N → ¬ (len M ≡ len N) → ⊥
+len≡≠ M .M refl p = p refl
