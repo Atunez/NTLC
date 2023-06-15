@@ -94,3 +94,8 @@ var∈≡ M x refl = here
 ∈[∈] (right s oc1) f oc2 = right (bind f s) (∈[∈] oc1 f oc2)
 ∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i))
 
+∈[f] : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ X) (f : ↑ X → Λ X) (x : X) → x ∈ f (i x) → (i (i x)) ∈ M → (i x) ∈ (M [ (lift f) ])  
+∈[f] (var .(i (i x))) N f x fn here = fn ∈→ i
+∈[f] (app M M₁) N f x fn (left occ .M₁) = left (∈[f] M N f x fn occ) _
+∈[f] (app M M₁) N f x fn (right .M occ) = right _ (∈[f] M₁ N f x fn occ)
+∈[f] (abs M) N f x fn (down occ) = down (∈[f] M (Λ→ i N) (lift f) (i x) (fn ∈→ i) occ)
