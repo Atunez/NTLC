@@ -70,6 +70,12 @@ occInj f finj x (app t1 t2) (left occ .(Λ→ f t2)) = left (occInj f finj x t1 
 occInj f finj x (app t1 t2) (right .(Λ→ f t1) occ) = right t1 (occInj f finj x t2 occ)
 occInj f finj x (abs t0) (down occ) =  down (occInj (↑→ f) (↑→Inj f finj) (i x) t0 occ)
 
+InjOcc : ∀ {X Y} (f : X → Y) (finj : isInj f) (x : X) (t : Λ X) → x ∈ t → f x ∈ Λ→ f t
+InjOcc f finj x (var .x) here = here
+InjOcc f finj x (app y y₁) (left occ .y₁) = left (InjOcc f finj x y occ) (Λ→ f y₁)
+InjOcc f finj x (app y y₁) (right .y occ) = right (Λ→ f y) (InjOcc f finj x y₁ occ)
+InjOcc f finj x (abs y) (down occ) = down (InjOcc (↑→ f) (↑→Inj f finj) (i x) y occ)
+
 occIni : ∀ {X} (s : Λ X) {x : X} → i x ∈ Λ→ i s → x ∈ s
 occIni s occ = occInj i iInj _ s occ
 
@@ -85,6 +91,9 @@ notoccursΛ→ f y h (abs t0) (down occ) = notoccursΛ→ (↑→ f) (i y) h' t0
 o∉Λ→i : ∀ {X} (s : Λ X) → ¬ (o ∈ Λ→ i s)
 o∉Λ→i s = notoccursΛ→ i o (λ x → λ {()} ) s
 
+x∉Λ→i : ∀ {X} (s : Λ X) (x : X) → x ∉ s → ¬ ((i x) ∈ Λ→ i s)
+x∉Λ→i s x nocc occ = nocc (occInj i iInj x s occ)
+
 var∈≡ : ∀ {X} (M : Λ X) (x : X) → M ≡ var x → x ∈ M
 var∈≡ M x refl = here
 
@@ -92,10 +101,19 @@ var∈≡ M x refl = here
 ∈[∈] here f oc2 = oc2
 ∈[∈] (left oc1 t) f oc2 = left (∈[∈] oc1 f oc2) (bind f t)
 ∈[∈] (right s oc1) f oc2 = right (bind f s) (∈[∈] oc1 f oc2)
-∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i))
+∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i)) 
 
 ∈[f] : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ X) (f : ↑ X → Λ X) (x : X) → x ∈ f (i x) → (i (i x)) ∈ M → (i x) ∈ (M [ (lift f) ])  
 ∈[f] (var .(i (i x))) N f x fn here = fn ∈→ i
 ∈[f] (app M M₁) N f x fn (left occ .M₁) = left (∈[f] M N f x fn occ) _
 ∈[f] (app M M₁) N f x fn (right .M occ) = right _ (∈[f] M₁ N f x fn occ)
 ∈[f] (abs M) N f x fn (down occ) = down (∈[f] M (Λ→ i N) (lift f) (i x) (fn ∈→ i) occ)
+
+∈[∈]2 : ∀ {X Y} {x : X} {y : Y} {s : Λ X} → x ∈ s → (f : X → Λ Y) → y ∈ f x → y ∈ (s [ f ])
+∈[∈]2 here f occ2 = occ2
+∈[∈]2 (left occ t) f occ2 = left (∈[∈]2 occ f occ2) (bind f t)
+∈[∈]2 (right s occ) f occ2 = right (bind f s) (∈[∈]2 occ f occ2)
+∈[∈]2 (down occ) f occ2 = down (∈[∈]2 occ (lift f) (occ2 ∈→ i))
+
+∈∉ : ∀ {X} {x : X} {s : Λ X} → x ∈ s → x ∉ s → ⊥
+∈∉ occ nocc = nocc occ 

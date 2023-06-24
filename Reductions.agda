@@ -109,3 +109,31 @@ bind⇉subst {g = g} (red⇉ {M} {M'} {N} {N'} red red₁) prf =
 ⇉-subst : ∀ {X : Set} {M M'} {N N' : Λ X} →
             M ⇉ M' → N ⇉ N' → M [ N ]ₒ ⇉ M' [ N' ]ₒ
 ⇉-subst rd1 rd2 = bind⇉subst rd1 (λ {(i x) → ε⇉; o → rd2}) 
+
+nf : ∀ {X : Set} → Λ X → Set
+nf {X} M = ∀ (N : Λ X) → M ⟶ N → ⊥
+
+-- record Conf {X : Set} (R : Rel X) (M : X) (N : X) : Set where
+--   constructor conf
+--   field
+--     node : X
+--     lleg : R M node
+--     rleg : R N node
+-- open Conf
+record contracta {X : Set} (M : Λ X) : Set where
+  constructor contr 
+  field
+    tgt : Λ X
+    red : M ⟶ tgt
+
+pure : ∀ {X : Set} → Λ X → Set  
+pure {X} M = ∀ (C D : contracta M) → C ≡ D
+
+allNFarePure : ∀ {X : Set} (M : Λ X) → nf M → pure M
+allNFarePure M nf (contr tgt red) D = exfalso (nf tgt red)
+
+contracta≡ : ∀ {X : Set} {M N : Λ X} → M ≡ N → contracta M → contracta N
+contracta≡ refl C = C 
+
+pure≡ : ∀ {X : Set} {M N : Λ X} → M ≡ N → pure M → pure N
+pure≡ refl prf = prf

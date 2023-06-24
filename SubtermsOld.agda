@@ -4,45 +4,24 @@ open import Lambda
 
 -- The type of contains
 -- ⊑ is \squb=
-data contains {X Y : Set} : (f : X → Y) → Λ X → Λ Y → Set where
-  Here  : ∀ {f} {x} → contains f (var x) (var (f x))
-  Left  : ∀ {f} {M N1} → contains f N1 M → (N2 : Λ X) → contains f (app N1 N2) M -- M ⊑ app N1 N2
-  Right : ∀ {f} {M} N1 {N2 : Λ X} → contains f N2 M  → contains f (app N1 N2) M -- M ⊑ app N1 N2
-  Down  : ∀ {f} {M : Λ Y} {N : Λ (↑ X)} → contains f N M → contains (f ∘ i) (abs N) M -- M ⊑ abs N
+infix 17 _⊑_
+data contains {X Y : Set} (f : X → Y) : Λ X → Λ Y → Set where
+  Here  : ∀ {x} → contains f (var x) (var (f x))
+  Left  : ∀ {M N1} → contains f N1 M → (N2 : Λ X) → contains f (app N1 N2) M -- M ⊑ app N1 N2
+  Right : ∀ {M} N1 {N2 : Λ X} → contains f N2 M  → contains f (app N1 N2) M -- M ⊑ app N1 N2
+  Down  : ∀ {M} {N : Λ (↑ X)} → contains (f ∘ i) N M → contains f (abs N) M -- Λ→i M ⊑ N → M ⊑ abs N
 
-I : ∀ {X} → Λ X
-I = abs (var o)
+{- Comment 6.12
+This definition is broken; the weakening in the abstraction case
+precludes antisymmetry from being provable by induction.
+If var o is a subterm of t,
+there is no way to express that it's also a subterm of abs t.
+Perhaps the types of M and N in M ⊑ N should be over different index sets,
+related by a function.
+-}
 
--- o is in i
-ContainsIO : ∀ {X} → contains i (I {X}) (var o)
-ContainsIO = Down (Here {f = id})
-
-ContainsIII : ∀ {x} → contains id (app I I) I
-ContainsIII = Left (Down {!   !}) I
-
--- extentionality of contains on f
--- ⊏-ext : ∀ {X Y} {f g : X → Y} {M : Λ X} {N : Λ Y} → f ≃ g → contains f M N → contains g M N
--- ⊏-ext {g = g} fg (Here {x = x}) = transp (λ z → contains g (var x) (var z)) (~ fg x) Here
--- ⊏-ext fg (Left c N2) = Left (⊏-ext fg c) N2
--- ⊏-ext fg (Right N1 c) = Right N1 (⊏-ext fg c)
--- ⊏-ext fg (Down c) = {!   !}
-
-trans⊏ : ∀ {X Y Z} {f : X → Y} {g : Y → Z} {M : Λ X} {N : Λ Y} {Q : Λ Z} →
-          contains f M N → contains g N Q → contains (g ∘ f) M Q
-trans⊏ Here Here = Here
-trans⊏ (Left c1 N2) c2 = Left (trans⊏ c1 c2) N2
-trans⊏ (Right N1 c1) c2 = Right N1 (trans⊏ c1 c2)
-trans⊏ (Down c1) c2 = Down (trans⊏ c1 c2)
-
--- if M ≡ N them, if M contains Q, N contains Q
-≡⊏ : ∀ {X Y} {f : X → Y} {M N : Λ X} {Q : Λ Y} → M ≡ N → contains f M Q → contains f N Q
-≡⊏ refl c = c
-
-asym⊏ : ∀ {X} {M : Λ X} {f : X → X} {N : Λ X} → contains f M N → contains f N M → M ≡ N
-asym⊏ Here c2 = {!  c2  !}
-asym⊏ (Left c1 N2) c2 = {!   !}
-asym⊏ (Right N1 c1) c2 = {!   !}
-asym⊏ (Down c1) c2 = {!   !}
+-- _≡⊑_ : ∀ {X} {s t u : Λ X} → s ≡ t → t ⊑ u → s ⊑ u
+-- refl ≡⊑ tu = tu
 
 -- ⊑→ : ∀ {X Y} {s t : Λ X} → s ⊑ t → (f : X → Y) → Λ→ f s ⊑ Λ→ f t
 -- ⊑→ Here f = Here
@@ -137,4 +116,4 @@ asym⊏ (Down c1) c2 = {!   !}
 -- asym⊑ {X} {.(abs t0)} {abs t0} Here ts = refl
 -- asym⊑ {X} {s} {abs t0} (Down st) ts with asym⊑ (tran⊑ (⊑→ ts i) st) (Down {!    !} )
 -- ... | p = exfalso (¬abs≡ t0 p)                         -- Need: o ∉ t0.  Not provable.
-     
+ 
