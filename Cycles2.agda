@@ -30,6 +30,13 @@ open import Length public
 I : ∀ {X} → Λ X
 I = abs (var o)
 
+appVar : ∀ {X} (P1 P2 : Λ X) x → app P1 P2 ≡ var x → ⊥
+appVar P1 P2 x () 
+
+absApp : ∀ {X} (P1 P2 : Λ X) P3 → abs P3 ≡ app P1 P2 → ⊥
+absApp P1 P2 P3 ()
+
+
 -- eq21Helper : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ X) → bind (io var (Λ→ i N)) M ≡ var o → M ≡ var (i o)
 -- eq21Helper (var (i o)) N p = refl
 -- eq21Helper (var o) N p = exfalso ((o∉Λ→i N) (var∈≡ (Λ→ i N) o p))
@@ -43,6 +50,11 @@ I = abs (var o)
 -- eq21P2Lemma (app M M₁) Q f fn p occ = {!   !}
 -- eq21P2Lemma (abs M) Q f fn p occ = {!   !}
 
+-- eq24 : ∀ {X} (L12 : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L12) ≡ app (abs (abs (app L12 (var (i o))))) P → pure (app (abs (abs (app L12 (var (i o))))) P) → ⊥
+-- eq24 (var (i o)) P Q e p = {!    !}
+-- eq24 (var o) P Q e p = {!   !}
+-- eq24 (app L12 L13) P Q e p = {!   !}
+
 -- -- If L3[Q, P] = Q, then either L3 is y or L3[y, x] = L3[x], ie y ∉ L3
 -- eq21L3 : ∀ {X} (L3 : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L3) ≡ Q → L3 ≡ var (i o) ⊔ ¬ ((i o) ∈ L3) 
 -- eq21L3 (var (i (i x))) P Q p = inr λ ()
@@ -53,14 +65,13 @@ I = abs (var o)
 -- eq21L3 (abs L3) P (abs Q) p with abs≡inv p
 -- ... | p2 = inr λ {(down q) → {!   !} (∈[f] L3 Q (io var (Λ→ i P)) o here q)}
 
-
--- eq21 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → (L [ Λ→i P ]ₒ) [ Q ]ₒ ≡ app (app (abs (abs L)) P) Q → ⊥
+-- eq21 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → (L [ Λ→i P ]ₒ) [ Q ]ₒ ≡ app (app (abs (abs L)) P) Q → pure (app (app (abs (abs L)) P) Q) → ⊥
 -- -- L is a free var
--- eq21 (var (i (i x))) P Q ()
+-- eq21 (var (i (i x))) P Q () p
 -- -- L is var y
--- eq21 (var (i o)) P Q ()
+-- eq21 (var (i o)) P Q () p
 -- -- L is var x
--- eq21 (var o) P Q e = -- Impossible, RHS of e can't contain O since LHS doesn't
+-- eq21 (var o) P Q e p = -- Impossible, RHS of e can't contain O since LHS doesn't
 --   let noBind = bindOnNoVar (Λ→ i P) Q (io var Q) o (o∉Λ→i P) λ {(i x) → λ _ → inr refl
 --                                                               ; o → λ _ → inl (refl , refl)} 
       
@@ -69,10 +80,12 @@ I = abs (var o)
 --     <Prf O n = O< (S (S (S n)))
 --     <Prf (S m) n = S< m (S (S (S (S (m ++ n))))) (<Prf m n)
 -- -- L is L12[y, x]L3[y, x]
--- eq21 (app L12 L3) P Q e with app≡inv e
+-- eq21 (app L12 L3) P Q e p with app≡inv e
 -- -- e1 = L12[Q, P] = (\x\y.L12[y, x]L3[y, x])P
 -- -- e2 = L3[Q, P] = Q
--- ... | (e1 , e2) = case (λ {x → {! eq21Helper L3 _ x  !}}) (λ {x → {!    !}}) (lercherEq3 (bind (io var (Λ→ i P)) L3) Q e2)
+-- ... | (e1 , e2) with eq21L3 L3 P Q e2 
+-- ... | inl refl = {!   !} 
+-- ... | inr x = {!   !}
 
 -- -- If you walk along the following path:
 -- -- M≡(\x.\y.L[x,y])PQ → (\y.L[P,y])Q → L[P,Q]≡M
@@ -83,11 +96,20 @@ I = abs (var o)
 -- -- PA2 L P Q t1 .(app _ Q) r1 p1 (appL→ r2) p2 = {!   !}
 -- -- PA2 L P Q t1 .(app (abs L [ P ]ₒ) _) r1 p1 (appR→ r2) p2 = {!   !}
 
-appVar : ∀ {X} (P1 P2 : Λ X) x → app P1 P2 ≡ var x → ⊥
-appVar P1 P2 x () 
 
-absApp : ∀ {X} (P1 P2 : Λ X) P3 → abs P3 ≡ app P1 P2 → ⊥
-absApp P1 P2 P3 ()
+-- CCGenG : ∀ {X} (P12 P22 Q : Λ (↑ X)) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → bind f P12 ≡ abs (app (app P22 P12) Q) → P12 ≡ var o
+-- CCGenG (var (i x)) P22 Q f fn p with fn x (transp (λ t → x ∈ t) (~ p) (down (left (right P22 here) Q)))
+-- ... | q with ~ q ! p
+-- ... | ()
+-- CCGenG (var o) P22 Q f fn p = refl
+-- CCGenG (abs (var (i x))) P22 Q f fn p = {!   !}
+-- CCGenG (abs (app (var (i x)) P13)) P22 Q f fn p with app≡inv (abs≡inv p)
+-- ... | p1 , p2 = {!   !}
+-- CCGenG (abs (app (app P12 P14) P13)) P22 Q f fn p with app≡inv (abs≡inv p)
+-- ... | p1 , p2 with app≡inv p1
+-- ... | p3 , p4 with CCGenG P14 P12 P13 (lift f) (λ {(i x) → λ q → ext (Λ→ i) (fn x (occInj i iInj x (f (i x)) q))
+--                                             ; o → λ q → exfalso (o∉Λ→i (f o) q)}) p4
+-- CCGenG (abs (app (app P12 .(var o)) P13)) P22 Q f fn p | p1 , p2 | p3 , () | refl
 
 CCGen : ∀ {X} (P12 Q : Λ (↑ X)) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → bind f P12 ≡ abs (app (app (var o) P12) Q) → P12 ≡ var o
 CCGen (var (i x)) Q f fn p with fn x (transp (λ t → x ∈ t) (~ p) (down (left (right (var o) here) Q)))
@@ -201,4 +223,4 @@ PA1 : ∀ {X} (P : Λ (↑ X)) (Q t1 t2 : Λ X) → app (app I (abs P)) Q ⟶ t1
 PA1 P Q .(app _ Q) .(P [ Q ]ₒ) (appL→ r1) p1 (redex .P .Q) p2 np = eq9 P Q p2 (transp (λ t → (pure t)) p2 np)
 PA1 P Q .(app _ Q) .(app (abs _) Q) (appL→ r1) p1 (appL→ (abs→ r2)) p2 np with app≡inv p2
 ... | ()
-                    
+                     

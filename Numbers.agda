@@ -157,3 +157,9 @@ S≤ p1 ≤+≤ S≤ p2 = S≤ (p1 ≤+≤ S≤ p2)
 
 ¬S< : ∀ {m n} → m ≡ n → m < n → ⊥
 ¬S< refl p = <-irrefl _ p
+
+¬S≤4 : ∀ {m : Nat} → ¬ (S (S (S (S m))) ≤ m)
+¬S≤4 {S m} (S≤ le) = ¬S≤4 le
+
+¬S4≤ : ∀ {m n} → m ≤ n → m ≡ S (S (S (S n))) → ⊥
+¬S4≤ p refl = ¬S≤4 p
