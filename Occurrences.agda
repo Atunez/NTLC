@@ -62,6 +62,11 @@ iInj refl = refl
 ...                           | q = ext i (inj q)
 ↑→Inj f inj {o} {o} refl = refl
 
+Λ→Inj : ∀ {X Y} (f : X → Y) → isInj f → isInj (Λ→ f)
+Λ→Inj f inj {var x} {var x₁} p = ext var (inj (var≡inv p))
+Λ→Inj f inj {app x1 x2} {app x3 x4} p = app≡ (Λ→Inj f inj (_×_.fst pinv)) (Λ→Inj f inj (_×_.snd pinv)) where pinv = app≡inv p
+Λ→Inj f inj {abs x1} {abs x2} p = abs≡ (Λ→Inj (↑→ f) (↑→Inj f inj) (abs≡inv p))
+
 occInj : ∀ {X Y} (f : X → Y) (finj : isInj f) (x : X) (t : Λ X) → f x ∈ Λ→ f t → x ∈ t
 occInj f finj x (var y) occ with f x | f y | finj {x} {y}
 occInj f finj x (var y) here | z | .z | q with q refl
