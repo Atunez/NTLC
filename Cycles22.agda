@@ -107,20 +107,22 @@ eq24Lemma2 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bi
 eq24Lemma2 (var x) P Q e p = {!   !}
 eq24Lemma2 (abs L) P Q e p = {!   !}
 
-eq24 : ∀ {X} (L12 : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L12) ≡ app (app (abs (abs (app L12 (var (i o))))) P) Q → pure (app (app (abs (abs (app L12 (var (i o))))) P) Q) → ⊥
-eq24 (var (i o)) P Q e p = {!   !}
-eq24 (var o) P Q e p = {!   !} -- len≡≠ _ _ t λ q → ¬S4 refl q where t = ~ NoBindOnWeaking P Q ! e
-eq24 (app L1 L2) P Q e p = {!   !}
--- with app≡inv e
--- -- e2 = L122[Q, P] = P
--- -- e1 = L121[Q, P] = \x\y.L121[y, x]L122[y, x]y
--- ... | (e1 , e2) with eq24Lemma L2 P Q {!   !}
--- ... | inl refl = ? --  eq24Lemma2 L1 P Q e1 p
--- eq24 (app (var (i o)) L2) P Q e p | e1 , e2 | inr x = {!   !} -- Real Solution 
--- eq24 (app (var o) L2) P Q e p | e1 , e2 | inr x = {!   !} -- Top of Page 21, "Simple" to Finish
--- eq24 (app (abs L1) L2) P Q e p | e1 , e2 | inr x with p (contr ((app (app (abs (abs (app (L1 [ L2 ]ₒ) (var (i o))))) P) Q)) (appL→ (appL→ (abs→ (abs→ (appL→ (redex L1 L2))))))) 
---                                                         (contr _ (appL→ (redex (abs (app (app (abs L1) L2) (var (i o)))) P)))
--- ... | ()
+
+eq24 : ∀ {X} (L12 : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L12) ≡ app (abs (abs (app L12 (var (i o))))) P → pure (app (app (abs (abs (app L12 (var (i o))))) P) Q) → ⊥
+eq24 (var (i o)) P .(app (abs (abs (app (var (i o)) (var (i o))))) P) refl p with p (contr _ (appL→ (redex _ P))) (contr _ (appR→ (redex _ P)))
+... | ()
+eq24 (var o) P Q e p = len≡≠ _ _ t λ q → ¬S4 refl q where t = ~ NoBindOnWeaking P Q ! e
+eq24 (app L1 L2) P Q e p with app≡inv e
+-- e2 = L122[Q, P] = P
+-- e1 = L121[Q, P] = \x\y.L121[y, x]L122[y, x]y
+... | (e1 , e2) with eq24Lemma L2 P Q e2
+... | inl refl = eq24Lemma2 L1 P Q e1 p
+eq24 (app (var (i o)) L2) P Q e p | e1 , e2 | inr x = {!   !} -- Real Solution 
+eq24 (app (var o) L2) P Q e p | e1 , e2 | inr x with (~ NoBindOnWeaking P Q) ! e1 
+... | refl = {!   !} -- Impossible Case, but Not sure how to prove it.
+eq24 (app (abs L1) L2) P Q e p | e1 , e2 | inr x with p (contr ((app (app (abs (abs (app (L1 [ L2 ]ₒ) (var (i o))))) P) Q)) (appL→ (appL→ (abs→ (abs→ (appL→ (redex L1 L2))))))) 
+                                                        (contr _ (appL→ (redex (abs (app (app (abs L1) L2) (var (i o)))) P)))
+... | ()
 
 eq21L3L : ∀ {X} (L3 : Λ (↑ (↑ X))) (Q : Λ (↑ X)) (f : ↑ (↑ X) → Λ (↑ X)) (x : ↑ X) → f (i x) ≡ var x → (i x) ∈ L3 → L3 [ f ] ≡ Q → x ∈ Q
 eq21L3L (var (i y)) Q f .y e here p = transp (λ t → y ∈ t) (~ e ! p) here
@@ -200,4 +202,4 @@ eq21 (app L12 L3) P Q d e p with app≡inv e
 -- Then, Q ≡ \xy.yxy OR P ≡ Q × (P ≡ \xy.yxx OR \xy.yyx) OR Q ≡ \xy.y?y where ? doesn't contain b as the LHS of App
 PA2 : ∀ (L : Λ (↑ (↑ ⊥))) (P Q t1 t2 : Λ ⊥) → app (app (abs (abs L)) P) Q ⟶ t1 → t1 ≡ app ((abs L) [ P ]ₒ) Q → app ((abs L) [ P ]ₒ) Q ⟶ t2 → t2 ≡ L [ Λ→i P ]ₒ [ Q ]ₒ → ⊥
 PA2 L P Q t1 t2 r1 p1 r2 p2 = {!   !}
-          
+           
