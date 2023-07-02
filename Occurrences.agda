@@ -122,3 +122,10 @@ var∈≡ M x refl = here
 
 ∈∉ : ∀ {X} {x : X} {s : Λ X} → x ∈ s → x ∉ s → ⊥
 ∈∉ occ nocc = nocc occ 
+
+∉[∈] : ∀ {X} {x : X} (s : Λ (↑ X)) → (i x) ∉ s → (f : ↑ X → Λ X) → (∀ y → y ∈ s → x ∉ f y) → x ∉ (s [ f ])
+∉[∈] (var x) nocc f fn occ = fn x here occ
+∉[∈] (app M M₁) nocc f fn (left occ .(bind f M₁)) = ∉[∈] M (λ z → nocc (left z M₁)) f (λ y z → fn y (left z M₁)) occ
+∉[∈] (app M M₁) nocc f fn (right .(bind f M) occ) = ∉[∈] M₁ (λ z → nocc (right M z)) f (λ y z → fn y (right M z)) occ
+∉[∈] (abs M) nocc f fn (down occ) = ∉[∈] M (λ q → nocc (down q)) (lift f) (λ {(i x) → λ q q2 → fn x (down q) (occIni (f x) q2)
+                                                                            ; o → λ _ ()}) occ 

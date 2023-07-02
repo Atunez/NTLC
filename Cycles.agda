@@ -13,14 +13,14 @@ bind-rec (app A1 A2) f (right .A1 occ) eq = exfalso (¬S≤ {len (A1 [ f ]) ++ l
 bind-rec (abs A0) f (down occ) eq = exfalso (¬S≤ {len (bind (lift f) A0)}
                (ext len eq ≡≤ ((~ (len→ i (f _) )) ≡≤ len∈bind (lift f) A0 occ) ))
 
-occurs-map : ∀ {X} (A : Λ (↑ X)) (B : Λ X) → A [ B ]ₒ ≡ B → ¬ (o ∈ A) → A ≡ Λ→ i B
-occurs-map A B h nocc =
-  let e0 : ∀ x → x ∈ A → var x ≡ (Λ→ i ∘ io var B) x
+occurs-map : ∀ {X} (A : Λ (↑ X)) (B C : Λ X) → A [ C ]ₒ ≡ B → ¬ (o ∈ A) → A ≡ Λ→ i B
+occurs-map A B C h nocc =
+  let e0 : ∀ x → x ∈ A → var x ≡ (Λ→ i ∘ io var C) x
       e0 = (λ { (i x) → λ p → refl ; o → exfalso ∘ nocc })
-      e1 = symm (bind-nat1 i (io var B))
-      e2 = bind-occurs (var) (Λ→ i ∘ io var B) A e0
-   in (~ bind-unit1 A) !  (e2 ! (e1 A ! ext (Λ→ i) h))
-
+      e1 = symm (bind-nat1 i (io var C))
+      e2 = bind-occurs (var) (Λ→ i ∘ io var C) A e0
+  in ((~ bind-unit1 A ! e2) ! e1 A) ! ext (Λ→i) h
+  
 decTop : ∀ {X} (A : Λ (↑ X)) → A ≡ var o ⊔ ¬ (A ≡ var o)
 decTop (var (i x)) = inr (λ { () })
 decTop (var o) = inl refl
@@ -30,7 +30,7 @@ decTop (abs A0) = inr (λ { () })
 lercherEq3 : ∀ {X} (A : Λ (↑ X)) (B : Λ X) → A [ B ]ₒ ≡ B → A ≡ var o ⊔ A ≡ Λ→ i B
 lercherEq3 A B e with decTop A
 ... | inl yes = inl yes
-... | inr no  = inr (occurs-map A B e o∉A)
+... | inr no  = inr (occurs-map A B B e o∉A)
   where o∉A = λ occ → no (bind-rec A (io var B) occ e)
 
 lercherEq2gen : ∀ {X} (A1 A2 : Λ (↑ X)) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → bind f A1 ≡ abs (app A1 A2) → A1 ≡ var o

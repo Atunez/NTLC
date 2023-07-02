@@ -77,35 +77,55 @@ appVar P1 P2 x ()
 absApp : ∀ {X} (P1 P2 : Λ X) P3 → abs P3 ≡ app P1 P2 → ⊥
 absApp P1 P2 P3 ()
 
-
 eq21Helper : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ X) → bind (io var (Λ→ i N)) M ≡ var o → M ≡ var (i o)
 eq21Helper (var (i o)) N p = refl
 eq21Helper (var o) N p = exfalso ((o∉Λ→i N) (var∈≡ (Λ→ i N) o p))
 
-bindOnNoVar : ∀ {X} (M : Λ (↑ X)) (N : Λ X) (f : ↑ X → Λ X) x → ¬ (x ∈ M) → (∀ (z : ↑ X) → z ∈ M → (z ≡ x × f x ≡ N) ⊔ len (f z) ≡ O) → len (bind f M) ≡ len M
-bindOnNoVar M N f x nocc fn = {!   !}
+NoBindOnNoO : ∀ {X} (M : Λ (↑ X)) (Q P : Λ X)  → ¬ (o ∈ M) → M [ Q ]ₒ ≡ P → M ≡ Λ→ i P
+NoBindOnNoO M Q P nocc e = occurs-map M P Q e nocc
+
+NBOWLemma : ∀ {X} (P Q : Λ X) (f : ↑ X → Λ X) (g : X → ↑ X) → (∀ x → x ∈ P → f (g x) ≡ var x) → (Λ→ g P) [ f ] ≡ P 
+NBOWLemma (var x) Q f g fn = fn x here
+NBOWLemma (app P P₁) Q f g fn = app≡ (NBOWLemma P Q f g (λ x z → fn x (left z P₁))) (NBOWLemma P₁ Q f g (λ x z → fn x (right P z)))
+NBOWLemma (abs P) Q f g fn = abs≡ (NBOWLemma P (Λ→ i Q) (lift f) (↑→ g) λ {(i x) → λ q → ext (Λ→ i) (fn x (down q))
+                                                                         ; o → λ _ → refl})
 
 NoBindOnWeaking : ∀ {X} (P Q : Λ X) → (Λ→ i P) [ Q ]ₒ ≡ P
-NoBindOnWeaking P Q = {!   !}
+NoBindOnWeaking P Q = NBOWLemma P Q (io var Q) i (λ x _ → refl)
 
-NoBindOnNoO : ∀ {X} (M : Λ (↑ X)) (Q P : Λ X) → ¬ (o ∈ M) → M [ Q ]ₒ ≡ P → M ≡ Λ→ i P
-NoBindOnNoO M P Q nocc = {!   !}
 
 -- eq21P2Lemma : ∀ {X} (M : Λ (↑ (↑ X))) (Q : Λ (↑ X)) (f : ↑ (↑ X) → Λ (↑ X)) → (∀ x → (x ∈ f (i x)) ⊔ (f (i x) ≡ Q)) → M [ f ] ≡ Q → ¬ (i o ∈ M)
 -- eq21P2Lemma (var .(i o)) Q f fn p here = {!    !}
 -- eq21P2Lemma (app M M₁) Q f fn p occ = {!   !}
 -- eq21P2Lemma (abs M) Q f fn p occ = {!   !}
 
-eq24Lemma : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ P → L ≡ var o ⊔ L [ Λ→ i Q ]ₒ ≡ Λ→ i P
-eq24Lemma (var (i (i x))) P Q p = {!   !}
-eq24Lemma (var (i o)) P Q p = {! exfalso  !}
-eq24Lemma (var o) P Q p = inl refl
-eq24Lemma (app L L₁) P Q p = {!   !}
-eq24Lemma (abs L) P Q p = {!   !}  
+-- This may be improperly stated...
+eq24Lemma : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ P → L ≡ var o ⊔ (L [ (λ {o → var o; (i (i x)) → var (i x); (i o) → var o}) ]) [ Q ]ₒ ≡ P
+eq24Lemma (var (i (i x))) P Q e = inr e
+eq24Lemma (var (i o)) P Q e = inr e
+eq24Lemma (var o) P Q e = inl refl
+eq24Lemma (app L L₁) (app P P₁) Q e = inr (app≡ {!   !} {!   !})
+eq24Lemma (abs L) (abs P) Q e with abs≡inv e 
+... | e1 = inr (abs≡ (case {!   !} {!   !} (eq24Lemma L P (Λ→ i Q) {!   !})))
+
 
 eq24Lemma2 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ abs (abs (app (app L (var o)) (var (i o)))) → pure (app (app (abs (abs (app (app L (var o)) (var (i o))))) P) Q) → ⊥ 
-eq24Lemma2 (var x) P Q e p = {!   !}
-eq24Lemma2 (abs L) P Q e p = {!   !}
+eq24Lemma2 (var (i o)) P Q e p = {!   !} -- Real Goal
+eq24Lemma2 (var o) P Q e p = {!   !} -- Note Pure
+eq24Lemma2 (abs L) P Q e p = {!   !} -- Lercher2 Situation?
+
+-- eq24Lemma2 (abs (var (i (i o)))) P (abs (app Q (var (i x)))) () p
+-- eq24Lemma2 (abs (var (i (i o)))) P (abs (app Q (var o))) () p 
+-- eq24Lemma2 (abs (var (i o))) (abs (var (i x))) Q () p
+-- eq24Lemma2 (abs (var (i o))) (abs (var o)) Q () p
+-- eq24Lemma2 (abs (var (i o))) (abs (app P (var (i x)))) Q () p
+-- eq24Lemma2 (abs (var (i o))) (abs (app P (var o))) Q () p
+-- eq24Lemma2 (abs (abs (var (i (i (i o)))))) P (app Q (app Q₁ Q₂)) () p
+-- eq24Lemma2 (abs (abs (var (i (i (i o)))))) P (app Q (abs Q₁)) () p
+-- eq24Lemma2 (abs (abs (var (i (i o))))) (app P (app P₁ P₂)) Q () p
+-- eq24Lemma2 (abs (abs (var (i (i o))))) (app P (abs P₁)) Q () p
+-- eq24Lemma2 (abs (abs (app (var x) L₁))) P Q e p = {!   !}
+-- eq24Lemma2 (abs (abs (app (app L (var x)) (var x₁)))) P Q e p = {!   !}
 
 
 eq24 : ∀ {X} (L12 : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L12) ≡ app (abs (abs (app L12 (var (i o))))) P → pure (app (app (abs (abs (app L12 (var (i o))))) P) Q) → ⊥
@@ -146,7 +166,7 @@ eq21L3 (var o) P Q p | inl x = exfalso (o∉Λ→i P (transp (λ t → o ∈ t) 
 
 eq38 : ∀ {X} (L2 : Λ (↑ (↑ X))) (P : Λ X) → P ≡ abs (abs (app (app (var (i o)) L2) (var o))) → bind (io var P) (bind (io var (Λ→ i P)) L2) ≡ P → ⊥
 eq38 L2 P p1 p2 with lercherEq3 (L2 [ Λ→ i P ]ₒ) P p2
--- 15 is impossible, rest are real goals.
+-- second goal of the three is impossible, rest are real goals.
 ... | inr x = case (λ {refl → {!   !}}) (λ {refl → {!   !}}) (lercherEq3 L2 _ x)
 ... | inl x with eq21Helper L2 _ x 
 ... | refl = {!   !}
@@ -158,6 +178,9 @@ eq38 L2 P p1 p2 with lercherEq3 (L2 [ Λ→ i P ]ₒ) P p2
 bindExtTerm : ∀ {X} (P : Λ (↑ X)) (Q Q2 M : Λ X) → Q ≡ Q2 → P [ Q ]ₒ ≡ M → P [ Q2 ]ₒ ≡ M
 bindExtTerm P Q Q2 M refl p = p
 
+bindExtTerm2 : ∀ {X} (P : Λ (↑ X)) (Q Q2 M : Λ X) → Q ≡ Q2 → P [ io var Q ] ≡ M → P [ io var Q2 ] ≡ M
+bindExtTerm2 P Q Q2 M refl p = p
+
 eq32 : ∀ {X} (L12 L3 : Λ (↑ (↑ X))) (P Q : Λ X) → dec X → ¬ ((i o) ∈ L3) → L3 [ Λ→ i P ]ₒ ≡ Λ→ i Q → L12 [ Λ→ i P ]ₒ [ Q ]ₒ ≡ app (abs (abs (app L12 L3))) P → pure (app (app (abs (abs (app L12 L3))) P) Q) → ⊥
 eq32 (var (i o)) L3 P .(app (abs (abs (app (var (i o)) L3))) P) d nocc e1 refl p with p (contr _ (appR→ (redex (abs (app (var (i o)) L3)) P))) 
                                                                                       (contr _ (appL→ (redex (abs (app (var (i o)) L3)) P)))
@@ -166,7 +189,9 @@ eq32 (var o) L3 P Q d nocc e1 e2 p = len≡≠ _ _ t λ q → ¬S4≤ (++≤R (l
 eq32 (app (var (i o)) L2) L3 P Q d nocc e1 e2 p with decΛ ((dec↑ (dec↑ d)) o) L3
 ... | inl x = case (λ {refl → let PQ = Λ→iPQ P Q e1 in eq38 L2 P (PQ ! _×_.fst epp) (bindExtTerm (L2 [ Λ→ i P ]ₒ) _ _ _ (~ PQ) (_×_.snd epp))}) 
                     -- case 3 in page 23
-                    (λ {q → {!   !}}) (decTop L3) where epp = app≡inv e2
+                    -- Cases in order here: y ∈ L2[y, x] -- Should yield an infinite term 
+                    -- L2[y, x] ≡ x and L2[y, x] = P
+                    (λ {q → case {!   !} (case {!   !} {!   !} (decTop L2)) (decΛ ((dec↑ (dec↑ d)) (i o)) L2)}) (decTop L3) where epp = app≡inv e2
 ... | inr x with app≡inv e2
 ... | (e21 , e22) with NoBindOnNoO L3 _ _ x e1
 ... | refl = len≡≠ _ _ e21 λ q → ¬S4≤ (zero≤ ≤+≤ (≤refl (len Q) ≤≡ (~ len→ i Q ! ~ len→ i (Λ→ i Q)))) q
@@ -182,10 +207,10 @@ eq21 (var (i (i x))) P Q d () p
 eq21 (var (i o)) P Q d () p
 -- L is var x
 eq21 (var o) P Q d e p = -- Impossible, RHS of e can't contain O since LHS doesn't
-  let noBind = bindOnNoVar (Λ→ i P) Q (io var Q) o (o∉Λ→i P) λ {(i x) → λ _ → inr refl
+  let noBind = len∉bind (Λ→ i P) Q (io var Q) o (o∉Λ→i P) λ {(i x) → λ _ → inr refl
                                                               ; o → λ _ → inl (refl , refl)} 
       
-  in len≡≠ _ _ e (λ q → ¬S< (~ (len→ i P) ! ~ noBind ! q) (<Prf _ _)) where
+  in len≡≠ _ _ e (λ q → ¬S< (~ (len→  i P) ! ~ noBind ! q) (<Prf _ _)) where
     <Prf : ∀ (m n : Nat) → m < S (S (S (S (m ++ n))))
     <Prf O n = O< (S (S (S n)))
     <Prf (S m) n = S< m (S (S (S (S (m ++ n))))) (<Prf m n)
@@ -194,12 +219,15 @@ eq21 (app L12 L3) P Q d e p with app≡inv e
 -- e1 = L12[Q, P] = (\x\y.L12[y, x]L3[y, x])P
 -- e2 = L3[Q, P] = Q
 ... | (e1 , e2) with eq21L3 L3 P Q e2 
-... | inl refl = {!   !} -- eq24 L12 P Q e1 p 
-... | inr x = eq32 L12 L3 P Q d x {!   !} e1 p
+... | inl refl = eq24 L12 P Q e1 p 
+-- This is ugly...
+... | inr x = eq32 L12 L3 P Q d x (NoBindOnNoO (bind (io var (Λ→ i P)) L3) Q Q (∉[∈] L3 x (io var (Λ→ i P)) (λ {(i (i x)) → λ _ ()
+                                                                                                              ; (i o) → λ z _ → x z
+                                                                                                              ; o → λ p q → o∉Λ→i P q})) e2) e1 p
 
 -- If you walk along the following path:
 -- M≡(\x.\y.L[x,y])PQ → (\y.L[P,y])Q → L[P,Q]≡M
 -- Then, Q ≡ \xy.yxy OR P ≡ Q × (P ≡ \xy.yxx OR \xy.yyx) OR Q ≡ \xy.y?y where ? doesn't contain b as the LHS of App
 PA2 : ∀ (L : Λ (↑ (↑ ⊥))) (P Q t1 t2 : Λ ⊥) → app (app (abs (abs L)) P) Q ⟶ t1 → t1 ≡ app ((abs L) [ P ]ₒ) Q → app ((abs L) [ P ]ₒ) Q ⟶ t2 → t2 ≡ L [ Λ→i P ]ₒ [ Q ]ₒ → ⊥
 PA2 L P Q t1 t2 r1 p1 r2 p2 = {!   !}
-           
+              
