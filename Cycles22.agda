@@ -127,6 +127,9 @@ eq24Lemma2 (abs L) P Q e p = {!   !} -- Lercher2 Situation?
 -- eq24Lemma2 (abs (abs (app (var x) L₁))) P Q e p = {!   !}
 -- eq24Lemma2 (abs (abs (app (app L (var x)) (var x₁)))) P Q e p = {!   !}
 
+eq24Lemma3 : ∀ {X} (L2 : Λ (↑ (↑ X))) (Q : Λ X) → ¬ (o ∈ L2) → L2 [ Λ→ i Q ]ₒ ≡ abs (abs (app (app (var o) L2) (var (i o)))) → L2 ≡ var (i o)
+eq24Lemma3 L2 Q p = ?
+
 
 eq24 : ∀ {X} (L12 : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L12) ≡ app (abs (abs (app L12 (var (i o))))) P → pure (app (app (abs (abs (app L12 (var (i o))))) P) Q) → ⊥
 eq24 (var (i o)) P .(app (abs (abs (app (var (i o)) (var (i o))))) P) refl p with p (contr _ (appL→ (redex _ P))) (contr _ (appR→ (redex _ P)))
@@ -139,7 +142,7 @@ eq24 (app L1 L2) P Q e p with app≡inv e
 ... | inl refl = eq24Lemma2 L1 P Q e1 p
 eq24 (app (var (i o)) L2) P Q e p | e1 , e2 | inr x = {!   !} -- Real Solution 
 eq24 (app (var o) L2) P Q e p | e1 , e2 | inr x with (~ NoBindOnWeaking P Q) ! e1 
-... | refl = {!   !} -- Impossible Case, but Not sure how to prove it.
+... | refl = {!    !} -- Impossible Case, but Not sure how to prove it.
 eq24 (app (abs L1) L2) P Q e p | e1 , e2 | inr x with p (contr ((app (app (abs (abs (app (L1 [ L2 ]ₒ) (var (i o))))) P) Q)) (appL→ (appL→ (abs→ (abs→ (appL→ (redex L1 L2))))))) 
                                                         (contr _ (appL→ (redex (abs (app (app (abs L1) L2) (var (i o)))) P)))
 ... | ()
@@ -222,8 +225,7 @@ eq21 (app L12 L3) P Q d e p with app≡inv e
 ... | inl refl = eq24 L12 P Q e1 p 
 -- This is ugly...
 ... | inr x = eq32 L12 L3 P Q d x (NoBindOnNoO (bind (io var (Λ→ i P)) L3) Q Q (∉[∈] L3 x (io var (Λ→ i P)) (λ {(i (i x)) → λ _ ()
-                                                                                                              ; (i o) → λ z _ → x z
-                                                                                                              ; o → λ p q → o∉Λ→i P q})) e2) e1 p
+      ; (i o) → λ z _ → x z; o → λ p q → o∉Λ→i P q})) e2) e1 p
 
 -- If you walk along the following path:
 -- M≡(\x.\y.L[x,y])PQ → (\y.L[P,y])Q → L[P,Q]≡M

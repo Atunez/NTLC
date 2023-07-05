@@ -148,6 +148,10 @@ S≤ p1 ≤+≤ S≤ p2 = S≤ (p1 ≤+≤ S≤ p2)
 ++≤L O m = O≤
 ++≤L (S l) m = S≤ (++≤L l m)
 
+++≤LN : ∀ {l m} n → l ≤ m → l ≤ (m ++ n)
+++≤LN n O≤ = O≤
+++≤LN n (S≤ p) = S≤ (++≤LN n p)
+
 ++≤R : ∀ l m → m ≤ (l ++ m)
 ++≤R l O = O≤
 ++≤R l (S m) = S≤ (++≤L m l) ≤≡ comm++ (S m) l 
@@ -163,3 +167,10 @@ S≤ p1 ≤+≤ S≤ p2 = S≤ (p1 ≤+≤ S≤ p2)
 
 ¬S4≤ : ∀ {m n} → m ≤ n → m ≡ S (S (S (S n))) → ⊥
 ¬S4≤ p refl = ¬S≤4 p
+
+¬S≤3 : ∀ {m : Nat} → ¬ ((S (S (S m))) ≤ m)
+¬S≤3 {S m} (S≤ le) = ¬S≤3 le
+
+¬S3≤ : ∀ {m n} → m ≤ n → m ≡ S (S (S n)) → ⊥
+¬S3≤ p refl = ¬S≤3 p
+ 

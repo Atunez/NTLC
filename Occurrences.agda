@@ -120,6 +120,9 @@ var∈≡ M x refl = here
 ∈[∈]2 (right s occ) f occ2 = right (bind f s) (∈[∈]2 occ f occ2)
 ∈[∈]2 (down occ) f occ2 = down (∈[∈]2 occ (lift f) (occ2 ∈→ i))
 
+-- ∈[∈]3 : ∀ {X Y} {x : X} {y : Y} {s : Λ X} → (f : X → Λ Y) → y ∈ f x → y ∈ (s [ f ]) → x ∈ s
+-- ∈[∈]3 f occ1 occ2 = {! occ1  !}
+
 ∈∉ : ∀ {X} {x : X} {s : Λ X} → x ∈ s → x ∉ s → ⊥
 ∈∉ occ nocc = nocc occ 
 
@@ -129,3 +132,8 @@ var∈≡ M x refl = here
 ∉[∈] (app M M₁) nocc f fn (right .(bind f M) occ) = ∉[∈] M₁ (λ z → nocc (right M z)) f (λ y z → fn y (right M z)) occ
 ∉[∈] (abs M) nocc f fn (down occ) = ∉[∈] M (λ q → nocc (down q)) (lift f) (λ {(i x) → λ q q2 → fn x (down q) (occIni (f x) q2)
                                                                             ; o → λ _ ()}) occ 
+
+-- ∈[∋] : ∀ {X} (M : Λ (↑ X)) (N : Λ (↑ X)) (f : ↑ X → Λ (↑ X)) → M [ f ] ≡ N → o ∈ N → (∀ x → x ∈ M → (x ≡ o × f x ≡ var o) ⊔ (f x ≡ )) → o ∈ M
+-- ∈[∋] (var x) .(var x [ f ]) f refl occ fn = case (λ {(refl , snd) → here}) (λ {q → {!   !}}) (fn x here)
+-- ∈[∋] (app M M₁) .(app M M₁ [ f ]) f refl occ fn = {!   !}
+-- ∈[∋] (abs M) .(abs M [ f ]) f refl occ fn = {!   !}
