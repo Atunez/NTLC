@@ -66,6 +66,13 @@ data _≤_ : Nat → Nat → Set where
   O≤ : ∀ {n} → O ≤ n
   S≤ : ∀ {n m} → n ≤ m → S n ≤ S m
 
+≤refl : ∀ (n : Nat) → n ≤ n
+≤refl O = O≤
+≤refl (S n) = S≤ (≤refl n)
+
+≡≤≡ : ∀ {m n} → m ≡ n → m ≤ n
+≡≤≡ refl = ≤refl _
+
 _≡≤_ : ∀ {l m n} → l ≡ m → m ≤ n → l ≤ n
 refl ≡≤ p = p
 
@@ -79,10 +86,6 @@ ltele (S< n m p) (S≤ q) = S< n _ (ltele p q)
 
 ≤-eq : ∀ {m n l : Nat} → n ≤ m → m ≡ l → n ≤ l
 ≤-eq p refl = p
-
-≤refl : ∀ (n : Nat) → n ≤ n
-≤refl O = O≤
-≤refl (S n) = S≤ (≤refl n)
 
 ≤S : ∀ {n m : Nat} → n ≤ m → n ≤ S m
 ≤S O≤ = O≤

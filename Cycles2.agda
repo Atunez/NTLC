@@ -1,6 +1,4 @@
 
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module Cycles2 where
 
 open import Lambda public
@@ -79,9 +77,10 @@ eq1617C3 P12 Q p1 p2 with CCGenGN P12 (abs (var o)) (var o) Q p1
 -- P12[Q] = \x.IP12[x]Q
 eq1617C4 : ∀ {X} (P12 : Λ (↑ X)) (Q : Λ X) → P12 [ Q ]ₒ ≡ abs (app (app (abs (var o)) P12) (Λ→ i Q)) → pure (app (app (abs (var o)) (abs (app (app (abs (var o)) P12) (Λ→ i Q)))) Q) → ⊥
 eq1617C4 P12 Q p1 p2 with CCGenGN P12 (abs (var o)) (Λ→ i Q) Q p1  
-... | refl with p2 (contr (app (abs (app (app I (var o)) (Λ→ i Q))) Q) (appL→ (redex (var o) (abs (app (app (abs (var o)) (var o)) (Λ→ i Q)))))) 
-                   (contr (app (app I (abs (app (var o) (Λ→ i Q)))) Q) (appL→ (appR→ (abs→ (appL→ (redex (var o) (var o)))))))
-... | ()
+... | refl = len≡≠ _ _ p1 (λ q → ¬S4≤ (≡≤≡ (~ len→ i Q)) q)
+-- with p2 (contr (app (abs (app (app I (var o)) (Λ→ i Q))) Q) (appL→ (redex (var o) (abs (app (app (abs (var o)) (var o)) (Λ→ i Q)))))) 
+--                    (contr (app (app I (abs (app (var o) (Λ→ i Q)))) Q) (appL→ (appR→ (abs→ (appL→ (redex (var o) (var o)))))))
+-- ... | ()
 
 eq1617 : ∀ {X} (P11 P12 P2 : Λ (↑ X)) (Q : Λ X) → P11 [ Q ]ₒ ≡ I → P12 [ Q ]ₒ ≡ abs (app (app P11 P12) P2) → P2 [ Q ]ₒ ≡ Q → ¬ (pure (app (app (abs (var o)) (abs (app (app P11 P12) P2))) Q))
 -- These are cases 1 and 2 on page 17

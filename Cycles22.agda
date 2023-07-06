@@ -3,6 +3,7 @@ module Cycles22 where
 open import Lambda public
 open import Cycles public
 open import Length public
+open import Cycles2 public
 
 -- -- If a term contains x, and the result of binding any variable doesn't contain x,
 -- -- then the term doesn't contain x after the bind.
@@ -68,8 +69,8 @@ decΛ {X} {x} d (abs t) with decΛ {↑ X} {i x} (decAti x d) t
 ...                       | inl yes = inl (down yes)
 ...                       | inr no  = inr (λ {(down p) → no p } )
 
-I : ∀ {X} → Λ X
-I = abs (var o)
+-- I : ∀ {X} → Λ X
+-- I = abs (var o)
 
 appVar : ∀ {X} (P1 P2 : Λ X) x → app P1 P2 ≡ var x → ⊥
 appVar P1 P2 x () 
@@ -93,26 +94,46 @@ NBOWLemma (abs P) Q f g fn = abs≡ (NBOWLemma P (Λ→ i Q) (lift f) (↑→ g)
 NoBindOnWeaking : ∀ {X} (P Q : Λ X) → (Λ→ i P) [ Q ]ₒ ≡ P
 NoBindOnWeaking P Q = NBOWLemma P Q (io var Q) i (λ x _ → refl)
 
+eq24Lemmafg : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) (g : ↑ (↑ X) → Λ X) → 
+              (∀ x → x ∈ g (i (i x)) → g (i (i x)) ≡ var x) → g o ≡ P
+              → L [ g ] ≡ P → o ∈ L → L ≡ var o
+eq24Lemmafg L P Q g gn go p occ = {!  bind-rec (L [ g ]) f {x = o}  !}
 
--- eq21P2Lemma : ∀ {X} (M : Λ (↑ (↑ X))) (Q : Λ (↑ X)) (f : ↑ (↑ X) → Λ (↑ X)) → (∀ x → (x ∈ f (i x)) ⊔ (f (i x) ≡ Q)) → M [ f ] ≡ Q → ¬ (i o ∈ M)
--- eq21P2Lemma (var .(i o)) Q f fn p here = {!    !}
--- eq21P2Lemma (app M M₁) Q f fn p occ = {!   !}
--- eq21P2Lemma (abs M) Q f fn p occ = {!   !}
+-- decTopIo : 
+
+-- eq24Lemma3 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) (f : ↑ (↑ X) → Λ X) → f o ≡ P → f (i o) ≡ Q → f (i (i x)) ≡ var x 
+eq24Lemma3 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io (io var P) Q) L ≡ P → (i o) ∈ L → L ≡ var (i o)
+eq24Lemma3 L P Q p occ = bind-rec L (io (io var P) Q) occ p
+
+decTopIo : ∀ {X} (A : Λ (↑ (↑ X))) → A ≡ var (i o) ⊔ ¬ (A ≡ var (i o))
+decTopIo A = {!   !}
+
+eq24Lemma33 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ P → L ≡ var (i o) ⊔ (i o) ∉ L
+eq24Lemma33 L P Q p with decTopIo L
+... | inl yes = inl yes
+... | inr no = 
+  let noSub = occurs-map {!   !} {!   !} {!   !} {!   !} {!   !}
+  in {!   !}
 
 -- This may be improperly stated...
-eq24Lemma : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ P → L ≡ var o ⊔ (L [ (λ {o → var o; (i (i x)) → var (i x); (i o) → var o}) ]) [ Q ]ₒ ≡ P
-eq24Lemma (var (i (i x))) P Q e = inr e
-eq24Lemma (var (i o)) P Q e = inr e
-eq24Lemma (var o) P Q e = inl refl
-eq24Lemma (app L L₁) (app P P₁) Q e = inr (app≡ {!   !} {!   !})
-eq24Lemma (abs L) (abs P) Q e with abs≡inv e 
-... | e1 = inr (abs≡ (case {!   !} {!   !} (eq24Lemma L P (Λ→ i Q) {!   !})))
+-- If L contains o, then it must be var o. 
+  -- If it contains more than 1 o, then they cant be equal
+  -- If o isn't at the top level, then LHS can't equal to just P...
+-- If it doesn't, then we can do direct substitution.
+eq24Lemma : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ P → L ≡ var o ⊔ o ∉ L
+eq24Lemma L P Q p = {! bind-rec L (io var )  !}
+-- eq24Lemma (app L L₁) P Q p = {!   !}
+-- eq24Lemma (abs L) (abs P) Q p = {!    !}
 
 
-eq24Lemma2 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ abs (abs (app (app L (var o)) (var (i o)))) → pure (app (app (abs (abs (app (app L (var o)) (var (i o))))) P) Q) → ⊥ 
-eq24Lemma2 (var (i o)) P Q e p = {!   !} -- Real Goal
-eq24Lemma2 (var o) P Q e p = {!   !} -- Note Pure
-eq24Lemma2 (abs L) P Q e p = {!   !} -- Lercher2 Situation?
+
+eq28 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io (io var P) Q) L ≡ abs (abs (app (app L (var (i o))) (var o)))
+    → pure (app (app (abs (abs (app (app L (var (i o))) (var o)))) P) Q) → L ≡ var o
+--  bind (io var Q) (bind (io var (Λ→ i P)) L) ≡ abs (abs (app (app L (var o)) (var (i o)))) 
+--   → pure (app (app (abs (abs (app (app L (var o)) (var (i o))))) P) Q) → ⊥ 
+eq28 (var (i o)) P Q e p = {!   !} -- Not Pure
+eq28 (var o) P Q e p = refl -- Real Answer
+eq28 (abs L) P Q e p = {!   !} -- Lercher2 Situation?
 
 -- eq24Lemma2 (abs (var (i (i o)))) P (abs (app Q (var (i x)))) () p
 -- eq24Lemma2 (abs (var (i (i o)))) P (abs (app Q (var o))) () p 
@@ -127,8 +148,8 @@ eq24Lemma2 (abs L) P Q e p = {!   !} -- Lercher2 Situation?
 -- eq24Lemma2 (abs (abs (app (var x) L₁))) P Q e p = {!   !}
 -- eq24Lemma2 (abs (abs (app (app L (var x)) (var x₁)))) P Q e p = {!   !}
 
-eq24Lemma3 : ∀ {X} (L2 : Λ (↑ (↑ X))) (Q : Λ X) → ¬ (o ∈ L2) → L2 [ Λ→ i Q ]ₒ ≡ abs (abs (app (app (var o) L2) (var (i o)))) → L2 ≡ var (i o)
-eq24Lemma3 L2 Q p = ?
+-- eq24Lemma3 : ∀ {X} (L2 : Λ (↑ (↑ X))) (Q : Λ X) → ¬ (o ∈ L2) → L2 [ Λ→ i Q ]ₒ ≡ abs (abs (app (app (var o) L2) (var (i o)))) → L2 ≡ var (i o)
+-- eq24Lemma3 L2 Q p = ?
 
 
 eq24 : ∀ {X} (L12 : Λ (↑ (↑ X))) (P Q : Λ X) → bind (io var Q) (bind (io var (Λ→ i P)) L12) ≡ app (abs (abs (app L12 (var (i o))))) P → pure (app (app (abs (abs (app L12 (var (i o))))) P) Q) → ⊥
@@ -139,7 +160,7 @@ eq24 (app L1 L2) P Q e p with app≡inv e
 -- e2 = L122[Q, P] = P
 -- e1 = L121[Q, P] = \x\y.L121[y, x]L122[y, x]y
 ... | (e1 , e2) with eq24Lemma L2 P Q e2
-... | inl refl = eq24Lemma2 L1 P Q e1 p
+... | inl refl = {!   !} -- eq28 L1 P Q e1 p
 eq24 (app (var (i o)) L2) P Q e p | e1 , e2 | inr x = {!   !} -- Real Solution 
 eq24 (app (var o) L2) P Q e p | e1 , e2 | inr x with (~ NoBindOnWeaking P Q) ! e1 
 ... | refl = {!    !} -- Impossible Case, but Not sure how to prove it.
