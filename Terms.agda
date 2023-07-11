@@ -18,6 +18,9 @@ data Λ (X : Set) : Set where
 Λ⁰ : Set
 Λ⁰ = Λ ⊥
 
+I : ∀ {X} → Λ X
+I = abs (var o)
+
 ω : ∀ {X} → Λ X
 ω = abs (app (var o) (var o))
 

@@ -66,6 +66,9 @@ infixl 10 _!_
 _!_ : ∀ {X} {x y z : X} → x ≡ y → y ≡ z → x ≡ z
 refl ! q = q
 
+_!~_ : ∀ {X} {x y z : X} → x ≡ z → y ≡ z → x ≡ y
+refl !~ refl = refl 
+
 -- EQUALITY OF FUNCTIONS
 -- ≃ is \simeq or \~-
 _≃_ : ∀ {X Y : Set} → (X → Y) → (X → Y) → Set

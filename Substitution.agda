@@ -12,6 +12,9 @@ lift≃ : ∀ {X Y : Set} → {f g : X → Λ Y} (fg : f ≃ g) → lift f ≃ l
 lift≃ fg (i x) = ext Λ→i (fg x)
 lift≃ fg o = refl
 
+Λ↑ : ∀ {X : Set} → ↑ (Λ X) → Λ (↑ X)
+Λ↑ = lift id 
+
 -- BIND: The generic substitution operator:
 --   Given M ∈ Λ X, where X = {x1,..,xk}, and
 --   a function f : X → Λ Y, assigning to each xi ∈ X
@@ -50,7 +53,7 @@ bind-nat1 : ∀ {X Y Y' : Set} (y : Y → Y') (f : X → Λ Y)
            → Λ→ y ∘ bind f ≃ bind (Λ→ y ∘ f)
 bind-nat1 y f (var x) = refl
 bind-nat1 y f (app t₀ t₁) = app≡ (bind-nat1 y f t₀) (bind-nat1 y f t₁)
-bind-nat1 y f (abs t) = abs≡ (bind-nat1 (↑→ y) (lift f) t ! 
+bind-nat1 y f (abs t) = abs≡ (bind-nat1 (↑→ y) (lift f) t !
                       bind-ext (λ {(i x) → ~ (Λ-func (↑→ y) i (f x)) ! Λ-func i y (f x) ; o → refl}) t)
 
 
@@ -64,8 +67,8 @@ bind-nat2 x f (abs t) = abs≡ (bind-ext (λ {o → refl; (i x) → refl}) t ! b
 -- Substitution Lemma
 subst→ : ∀ {X Y : Set} (f : X → Y) (M : Λ (↑ X)) (N : Λ X)
            → Λ→ f (M [ N ]ₒ) ≡ Λ→ (↑→ f) M [ Λ→ f N ]ₒ
-subst→ f M N = bind-nat1 f (io var N) M 
-              ! bind-ext (λ {o → refl; (i x) → refl}) M 
+subst→ f M N = bind-nat1 f (io var N) M
+              ! bind-ext (λ {o → refl; (i x) → refl}) M
               ! bind-nat2 (↑→ f) (io var (Λ→ f N)) M
 
 -- -- Associativity of bind
@@ -88,4 +91,3 @@ mapIsBind f (app t₀ t₁) = app≡ (mapIsBind f t₀ ) (mapIsBind f t₁)
 mapIsBind f (abs t) = abs≡ (mapIsBind (↑→ f) t ! bind-ext (λ {(i x) → refl ; o → refl} ) t )
 
 -}
- 

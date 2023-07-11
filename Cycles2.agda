@@ -5,9 +5,6 @@ open import Lambda public
 open import Cycles public
 open import Length public
 
-I : ∀ {X} → Λ X
-I = abs (var o)
-
 bind-oo : ∀ {X Y} (f : X → Λ Y) (M : Λ X) {x} {y} → (∀ z → y ∈ f z → z ≡ x) → y ∈ (M [ f ]) → x ∈ M
 bind-oo f (var v) {x} {y} h occ with h v occ
 ... | refl = here
@@ -25,7 +22,7 @@ CCGenG (var (i x)) P22 Q f fn occ p with fn x (transp (λ t → x ∈ t) (~ p) (
 ... | q with ~ q ! p
 ... | ()
 CCGenG (var o) P22 Q f fn occ p = refl
-CCGenG (abs (var (i .o))) P22 Q f fn (down here) p with abs≡inv p 
+CCGenG (abs (var (i .o))) P22 Q f fn (down here) p with abs≡inv p
 ... | m = exfalso (o∉Λ→i (f o) (transp (λ z → o ∈ z) (~ m) (left (right P22 (down here)) Q)))
 CCGenG (abs (app (var (i x)) P13)) P22 Q f fn occ p with app≡inv (abs≡inv p)
 CCGenG (abs (app (var (i .o)) P13)) P22 Q f fn (down (left here .P13)) p | p1 , p2 = exfalso (o∉Λ→i (f o) (transp (λ z → o ∈ z) (~ p1) (right P22 (down (left here P13)))))
@@ -38,7 +35,7 @@ CCGenG (abs (app (app P12 P14) P13)) P22 Q f fn (down occ) p with app≡inv (abs
 CCGenG (abs (app (app P12 .(var o)) P13)) P22 Q f fn occ p | p1 , p2 | p3 , () | refl
 
 CCGenGNoO : ∀ {X} (P12 P22 : Λ (↑ X)) (Q : Λ X) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → o ∉ P12 → P12 [ Q ]ₒ ≡ abs (app (app P22 P12) (Λ→ i Q)) → ⊥
-CCGenGNoO P12 P22 Q f fn nocc p = 
+CCGenGNoO P12 P22 Q f fn nocc p =
    let noSub = occurs-map _ _ _ p nocc
        eqLen = len→ (↑→ i) P12
        P12P22 = ++≤R (len (Λ→ (↑→ i) P22)) (len (Λ→ (↑→ i) P12))
@@ -48,7 +45,7 @@ CCGenGNoO P12 P22 Q f fn nocc p =
 CCGenGN : ∀ {X} (P12 P22 P32 : Λ (↑ X)) (Q : Λ X) → P12 [ Q ]ₒ ≡ abs (app (app P22 P12) P32) → P12 ≡ var o
 CCGenGN P12 P22 P32 Q p with decTop P12
 ... | inl yes = yes
-... | inr no = 
+... | inr no =
    let ifNoO = occurs-map P12 _ Q p λ q → no (CCGenG P12 P22 P32 (io var Q) (λ x _ → refl) q p)
        eqLen = len→ (↑→ i) P12
        P12P22 = ++≤R (len (Λ→ (↑→ i) P22)) (len (Λ→ (↑→ i) P12))
@@ -63,22 +60,23 @@ eq1617C1 P12 Q p1 p2 with CCGenGN P12 (var o) (var o) Q p2
 eq1617C2 : ∀ {X} (P12 : Λ (↑ X)) (Q : Λ X) → Q ≡ I → P12 [ Q ]ₒ ≡ abs (app (app (var o) P12) (Λ→ i Q)) → bind (io var Q) (Λ→ i Q) ≡ Q → ⊥
 eq1617C2 P12 .I refl p19 refl with CCGenGN P12 (var o) (Λ→ i I) I p19
 eq1617C2 .(var o) .I refl () refl | refl
+-- Two infinite solutions under equation 19 are escaped by this
 
 
 -- Case 3:
 -- P12[Q] = \x.IP12[x]x
 eq1617C3 : ∀ {X} (P12 : Λ (↑ X)) (Q : Λ X) → P12 [ Q ]ₒ ≡ abs (app (app (abs (var o)) P12) (var o)) → pure (app (app (abs (var o)) (abs (app (app (abs (var o)) P12) (var o)))) Q) → ⊥
-eq1617C3 P12 Q p1 p2 with CCGenGN P12 (abs (var o)) (var o) Q p1  
-... | refl with p2 (contr (app (abs (app (app (abs (var o)) (var o)) (var o))) Q) (appL→ (redex (var o) (abs (app (app (abs (var o)) (var o)) (var o)))))) 
+eq1617C3 P12 Q p1 p2 with CCGenGN P12 (abs (var o)) (var o) Q p1
+... | refl with p2 (contr (app (abs (app (app (abs (var o)) (var o)) (var o))) Q) (appL→ (redex (var o) (abs (app (app (abs (var o)) (var o)) (var o))))))
                    (contr (app (app I (abs (app (var o) (var o)))) Q) (appL→ (appR→ (abs→ (appL→ (redex (var o) (var o)))))))
 ... | ()
 
 -- Case 4:
 -- P12[Q] = \x.IP12[x]Q
 eq1617C4 : ∀ {X} (P12 : Λ (↑ X)) (Q : Λ X) → P12 [ Q ]ₒ ≡ abs (app (app (abs (var o)) P12) (Λ→ i Q)) → pure (app (app (abs (var o)) (abs (app (app (abs (var o)) P12) (Λ→ i Q)))) Q) → ⊥
-eq1617C4 P12 Q p1 p2 with CCGenGN P12 (abs (var o)) (Λ→ i Q) Q p1  
+eq1617C4 P12 Q p1 p2 with CCGenGN P12 (abs (var o)) (Λ→ i Q) Q p1
 ... | refl = len≡≠ _ _ p1 (λ q → ¬S4≤ (≡≤≡ (~ len→ i Q)) q)
--- with p2 (contr (app (abs (app (app I (var o)) (Λ→ i Q))) Q) (appL→ (redex (var o) (abs (app (app (abs (var o)) (var o)) (Λ→ i Q)))))) 
+-- with p2 (contr (app (abs (app (app I (var o)) (Λ→ i Q))) Q) (appL→ (redex (var o) (abs (app (app (abs (var o)) (var o)) (Λ→ i Q))))))
 --                    (contr (app (app I (abs (app (var o) (Λ→ i Q)))) Q) (appL→ (appR→ (abs→ (appL→ (redex (var o) (var o)))))))
 -- ... | ()
 
@@ -90,7 +88,7 @@ eq1617 (abs (var (i o))) P12 P2 Q p1 p2 p3 np with abs≡inv p1
 -- These are cases 3 and 4 on page 18
 eq1617 (abs (var o)) P12 P2 Q p1 p2 p3 np = case (λ {refl → eq1617C3 P12 Q p2 np}) (λ {refl → eq1617C4 P12 Q p2 np}) (lercherEq3 P2 Q p3)
 
-eq9Helper : ∀ {X} (P : Λ (↑ (↑ X))) (Q1 Q2 : Λ X) → bind (lift (io var (app Q1 Q2))) P ≡ var o → P ≡ var o 
+eq9Helper : ∀ {X} (P : Λ (↑ (↑ X))) (Q1 Q2 : Λ X) → bind (lift (io var (app Q1 Q2))) P ≡ var o → P ≡ var o
 eq9Helper (var (i (i x))) Q1 Q2 ()
 eq9Helper (var (i o)) Q1 Q2 ()
 eq9Helper (var o) Q1 Q2 p = refl
@@ -103,7 +101,7 @@ eq9 : ∀ {X} (P : Λ (↑ X)) (Q : Λ X) → P [ Q ]ₒ ≡ app (app I (abs P))
 eq9 (var (i x)) Q () np
 eq9 (var o) Q () np
 eq9 (app (var o) P2) Q e np with app≡inv e
-... | (e1 , e2) = case (λ {refl → impureSolution1 Q (transp (λ t → t ⟶ (abs (app (var o) (var o)))) (~ e1) (redex (var o) (abs (app (var o) (var o))))) (pure≡ (~ e) np)}) 
+... | (e1 , e2) = case (λ {refl → impureSolution1 Q (transp (λ t → t ⟶ (abs (app (var o) (var o)))) (~ e1) (redex (var o) (abs (app (var o) (var o))))) (pure≡ (~ e) np)})
                        (λ {refl → len≡≠ _ _ e1 (λ q → ¬S4 (~ len→ i Q) q)}) (lercherEq3 P2 Q e2)
 eq9 (app (app P1 P3) P2) Q e np with app≡inv e
 ... | e1 , e2 with app≡inv e1
@@ -113,4 +111,3 @@ PA1 : ∀ {X} (P : Λ (↑ X)) (Q t1 t2 : Λ X) → app (app I (abs P)) Q ⟶ t1
 PA1 P Q .(app _ Q) .(P [ Q ]ₒ) (appL→ r1) p1 (redex .P .Q) p2 np = eq9 P Q p2 (transp (λ t → (pure t)) p2 np)
 PA1 P Q .(app _ Q) .(app (abs _) Q) (appL→ r1) p1 (appL→ (abs→ r2)) p2 np with app≡inv p2
 ... | ()
-                           
