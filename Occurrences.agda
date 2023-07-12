@@ -106,9 +106,9 @@ var∈≡ M x refl = here
 ∈[∈] here f oc2 = oc2
 ∈[∈] (left oc1 t) f oc2 = left (∈[∈] oc1 f oc2) (bind f t)
 ∈[∈] (right s oc1) f oc2 = right (bind f s) (∈[∈] oc1 f oc2)
-∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i)) 
+∈[∈] (down oc1) f oc2 = down (∈[∈] oc1 (lift f) (oc2 ∈→ i))
 
-∈[f] : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ X) (f : ↑ X → Λ X) (x : X) → x ∈ f (i x) → (i (i x)) ∈ M → (i x) ∈ (M [ (lift f) ])  
+∈[f] : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ X) (f : ↑ X → Λ X) (x : X) → x ∈ f (i x) → (i (i x)) ∈ M → (i x) ∈ (M [ (lift f) ])
 ∈[f] (var .(i (i x))) N f x fn here = fn ∈→ i
 ∈[f] (app M M₁) N f x fn (left occ .M₁) = left (∈[f] M N f x fn occ) _
 ∈[f] (app M M₁) N f x fn (right .M occ) = right _ (∈[f] M₁ N f x fn occ)
@@ -124,16 +124,25 @@ var∈≡ M x refl = here
 -- ∈[∈]3 f occ1 occ2 = {! occ1  !}
 
 ∈∉ : ∀ {X} {x : X} {s : Λ X} → x ∈ s → x ∉ s → ⊥
-∈∉ occ nocc = nocc occ 
+∈∉ occ nocc = nocc occ
 
 ∉[∈] : ∀ {X} {x : X} (s : Λ (↑ X)) → (i x) ∉ s → (f : ↑ X → Λ X) → (∀ y → y ∈ s → x ∉ f y) → x ∉ (s [ f ])
 ∉[∈] (var x) nocc f fn occ = fn x here occ
 ∉[∈] (app M M₁) nocc f fn (left occ .(bind f M₁)) = ∉[∈] M (λ z → nocc (left z M₁)) f (λ y z → fn y (left z M₁)) occ
 ∉[∈] (app M M₁) nocc f fn (right .(bind f M) occ) = ∉[∈] M₁ (λ z → nocc (right M z)) f (λ y z → fn y (right M z)) occ
 ∉[∈] (abs M) nocc f fn (down occ) = ∉[∈] M (λ q → nocc (down q)) (lift f) (λ {(i x) → λ q q2 → fn x (down q) (occIni (f x) q2)
-                                                                            ; o → λ _ ()}) occ 
+                                                                            ; o → λ _ ()}) occ
 
 -- ∈[∋] : ∀ {X} (M : Λ (↑ X)) (N : Λ (↑ X)) (f : ↑ X → Λ (↑ X)) → M [ f ] ≡ N → o ∈ N → (∀ x → x ∈ M → (x ≡ o × f x ≡ var o) ⊔ (f x ≡ )) → o ∈ M
 -- ∈[∋] (var x) .(var x [ f ]) f refl occ fn = case (λ {(refl , snd) → here}) (λ {q → {!   !}}) (fn x here)
 -- ∈[∋] (app M M₁) .(app M M₁ [ f ]) f refl occ fn = {!   !}
 -- ∈[∋] (abs M) .(abs M [ f ]) f refl occ fn = {!   !}
+
+
+-- strTerm : ∀ {X} (M : Λ (↑ X)) → o ∉ M → Λ X
+-- strTerm (var (i x)) nocc = var x
+-- strTerm (var o) nocc = exfalso (nocc here)
+-- strTerm (app M1 M2) nocc = app (strTerm M1 λ z → nocc (left z M2) ) (strTerm M2 λ z → nocc (right M1 z) )
+-- strTerm (abs M) nocc = {!   !}
+
+-- strProof : ∀ {X} (M : Λ (↑ X)) {x : ↑ X} → x ∉ M → M ≡ Λ
