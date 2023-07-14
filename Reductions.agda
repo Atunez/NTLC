@@ -40,7 +40,6 @@ map⟶ f (abs→ r)    = abs→ (map⟶ (↑→ f) r)
 map⟶ f (appL→ r)   = appL→ (map⟶ f r)
 map⟶ f (appR→ r)   = appR→ (map⟶ f r)
 
-
 -- Multi-step beta reduction
 _⇒_ : ∀ {X : Set} → Rel (Λ X)
 _⇒_ = (_⟶_)*

@@ -4,53 +4,11 @@ open import Lambda public
 open import Cycles public
 open import Length public
 open import Cycles2 public
-open import Bicycles public
+open import Decidability public
+-- open import Bicycles public
 
-cheat : ∀ {X} → ¬ TwoCycleSolutions {X}
-cheat = {!   !}
-
-dec : Set → Set
-dec A = ∀ (x y : A) → x ≡ y ⊔ ¬ (x ≡ y)
-
-dec⊥ : dec ⊥
-dec⊥ () y
-
-dec⊤ : dec ⊤
-dec⊤ tt tt = inl refl
-
-dec↑ : ∀ {X} → dec X → dec (↑ X)
-dec↑ p (i x) (i y) with p x y
-...                   | inl q = inl (ext i q)
-...                   | inr q = inr (λ {refl → q refl } )
-dec↑ p o (i y) = inr (λ {()})
-dec↑ p (i x) o = inr (λ {()} )
-dec↑ p o o = inl refl
-
-decAt : ∀ (X : Set) → X → Set
-decAt X x = ∀ y → x ≡ y ⊔ ¬ (x ≡ y)
-
-decAto : ∀ {X} → decAt (↑ X) o
-decAto (i x) = inr (λ {()})
-decAto o = inl refl
-
-decAti : ∀ {X} x → decAt X x → decAt (↑ X) (i x)
-decAti x p (i y) with p y
-...                 | inl e = inl (ext i e)
-...                 | inr n = inr λ {(refl) → n refl }
-decAti x p o = inr (λ {()})
-
-decΛ : ∀ {X} {x} → (decAt X x) → ∀ t → x ∈ t ⊔ ¬ (x ∈ t)
-decΛ {X} {x} d (var y) with d y
-...                       | inl refl = inl here
-...                       | inr n = inr (λ {here → n refl })
-decΛ {X} {x} d (app t₁ t₂) with (decΛ d t₁ , decΛ d t₂)
-...                           | (inl p , inl q) = inl (left p t₂)
-...                           | (inl p , inr q) = inl (left p t₂)
-...                           | (inr p , inl q) = inl (right t₁ q)
-...                           | (inr p , inr q) = inr ((λ { (left s r) → p s ; (right r s) → q s }))
-decΛ {X} {x} d (abs t) with decΛ {↑ X} {i x} (decAti x d) t
-...                       | inl yes = inl (down yes)
-...                       | inr no  = inr (λ {(down p) → no p } )
+-- cheat : ∀ {X} → ¬ TwoCycleSolutions {X}
+-- cheat = {!   !}
 
 appVar : ∀ {X} (P1 P2 : Λ X) x → app P1 P2 ≡ var x → ⊥
 appVar P1 P2 x ()
@@ -122,7 +80,7 @@ eq24 (app L1 L2) P Q d p np with app≡inv p
 -- This is eq28
 -- All cases lead to something...
 -- Real Solution
-eq24 (app (var (i o)) .(var o)) P Q d p np | p1 , p2 | inl refl = exfalso (cheat (pure1 {!   !} ) )
+eq24 (app (var (i o)) .(var o)) P Q d p np | p1 , p2 | inl refl = {!   !} -- exfalso (cheat (pure1 {!   !} ) )
 -- This is a contradiction, due to purity
 eq24 (app (var o) .(var o)) P Q d p np | p1 , p2 | inl refl = {!   !}
 -- This has an infinite term
@@ -146,6 +104,7 @@ eq21check L P Q =
       e = λ {  o → refl ; (i o) → NoBindOnWeaking P Q ; (i (i x)) → refl }
       eq : bind (io var Q) (bind (lift (io var P)) L) ≡  (L [ io (io var P) Q ])
       eq = ((~ bind-law ((lift (io var P))) ((io var Q)) L ))  ! bind-ext e L
+      eq2 = {!   (var o) [ io (io var P) Q ]  !}
     in transp (λ z → app (app (abs (abs L)) P) Q ⇒ z) eq (c* step1 step2)
 
 eq21 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → dec X → (L [ Λ→i P ]ₒ) [ Q ]ₒ ≡ app (app (abs (abs L)) P) Q → pure (app (app (abs (abs L)) P) Q) → ⊥
@@ -163,7 +122,7 @@ eq21 (var o) P Q d p np with ~ NoBindOnWeaking P Q ! p
 eq21 (app L12 L3) P Q d p np with app≡inv p
 ... | (p1 , p2) with eq21L3 L3 P Q p2
 -- L3 is Var, leads to eq24
-... | inl refl = eq24 L12 P Q d p1 np
+... | inl refl = {!   !} -- eq24 L12 P Q d p1 np
 -- L3 doesn't contain y. Leads to eq32
 eq21 (app (var (i o)) L3) P .(app (abs (abs (app (var (i o)) L3))) P) d p np | refl , p2 | inr L3hasnoY with np (contr _ (appL→ (redex _ P))) (contr _ (appR→ (redex _ P)))
 ... | ()
