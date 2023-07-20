@@ -126,6 +126,11 @@ var∈≡ M x refl = here
 ∈∉ : ∀ {X} {x : X} {s : Λ X} → x ∈ s → x ∉ s → ⊥
 ∈∉ occ nocc = nocc occ
 
+unweaken : ∀ {X} (L : Λ (↑ X)) → o ∉ L → ∀ {M : Λ X} → L ≡ Λ→i (L [ M ]ₒ)
+unweaken L nocc {M} = (~ bind-unit1 L) ! bind-occurs var (λ z → Λ→ i (io var M z)) L (λ {(i x) → λ _ → refl
+                                                                                       ; o → λ q → exfalso (nocc q)}) ! ~ bind-nat1 i (io var M) L 
+
+
 ∉[∈] : ∀ {X} {x : X} (s : Λ (↑ X)) → (i x) ∉ s → (f : ↑ X → Λ X) → (∀ y → y ∈ s → x ∉ f y) → x ∉ (s [ f ])
 ∉[∈] (var x) nocc f fn occ = fn x here occ
 ∉[∈] (app M M₁) nocc f fn (left occ .(bind f M₁)) = ∉[∈] M (λ z → nocc (left z M₁)) f (λ y z → fn y (left z M₁)) occ
@@ -144,6 +149,14 @@ bind-oo f (abs M0) h (down occ) = down (bind-oo (lift f) M0 g occ)
 bind-o : ∀ {X Y} (f : X → Λ Y) (M : Λ (↑ X)) → o ∈ bind (lift f) M → o ∈ M
 bind-o f M occ = bind-oo (lift f) M g occ
   where g = λ { o oc → refl ; (i x) oc → exfalso (o∉Λ→i (f x) oc ) }
+
+
+bind-io : ∀ {X} (M : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ (↑ X)) x → i x ∈ M → x ∈ f (i x) → x ∈ bind f M
+bind-io (var (i (i x))) f .(i x) here occ2 = occ2
+bind-io (var (i o)) f .o here occ2 = occ2
+bind-io (app M M₁) f x (left occ .M₁) occ2 = left (bind-io M f x occ occ2) (bind f M₁)
+bind-io (app M M₁) f x (right .M occ) occ2 = right (bind f M) (bind-io M₁ f x occ occ2)
+bind-io (abs M) f x (down occ) occ2 = down (bind-io M (lift f) (i x) occ (InjOcc i iInj x (f (i x)) occ2)) 
 
 -- ∈[∋] : ∀ {X} (M : Λ (↑ X)) (N : Λ (↑ X)) (f : ↑ X → Λ (↑ X)) → M [ f ] ≡ N → o ∈ N → (∀ x → x ∈ M → (x ≡ o × f x ≡ var o) ⊔ (f x ≡ )) → o ∈ M
 -- ∈[∋] (var x) .(var x [ f ]) f refl occ fn = case (λ {(refl , snd) → here}) (λ {q → {!   !}}) (fn x here)

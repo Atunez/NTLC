@@ -121,6 +121,59 @@ CCGen (abs (abs (app (app L L₂@(var (i o))) L₁@(var o)))) P Q f fn p with ap
                                                 ; (i o) → λ q → exfalso (x∉Λ→i (Λ→ i (f (i o))) o (λ q2 → exfalso (o∉Λ→i (f (i o)) q2)) q)
                                                  ; o → λ q → exfalso (o∉Λ→i (Λ→ i (f o)) q)}) p3) 
 
+
+eq21HelperIo : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ (↑ X)) → M [ N ]ₒ ≡ var o → M ≡ var (i o) ⊔ N ≡ var o
+eq21HelperIo (var (i o)) N p = inl refl
+eq21HelperIo (var o) N p = inr p
+
+eq21Helper : ∀ {X} (M : Λ (↑ (↑ X))) (N : Λ X) → bind (io var (Λ→ i N)) M ≡ var o → M ≡ var (i o)
+eq21Helper (var (i o)) N p = refl
+eq21Helper (var o) N p = exfalso ((o∉Λ→i N) (var∈≡ (Λ→ i N) o p))
+
+CCGen2 : ∀ {X} (L : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ X) → (∀ x → x ∈ f (i (i x)) → f (i (i x)) ≡ var x) → {Q : Λ (↑ (↑ X))} → L [ f ] ≡ abs (abs (app (app (var o) Q) L)) → L ≡ var o ⊔ L ≡ abs (var (i o))
+CCGen2 (var (i (i x))) f fn {Q} p with ~ fn x (transp (λ q → x ∈ q) (~ p) (down (down (right (app (var o) Q) here)))) ! p
+... | ()
+CCGen2 (var (i o)) f fn {Q} p = {!   !}
+CCGen2 (var o) f fn {Q} p = {!   !}
+CCGen2 (abs (var (i (i (i x))))) f fn {Q} p with ~ ext (Λ→i) (fn x {!   !}) ! (abs≡inv p)
+... | ()
+CCGen2 (abs (var (i (i o)))) f fn {Q} p = {!   !}
+CCGen2 (abs (var (i o))) f fn {Q} p = {!   !}
+CCGen2 (abs (abs (var (i (i (i (i x))))))) f fn {Q} p = {!   !}
+CCGen2 (abs (abs (var (i (i (i o)))))) f fn {Q} p = {!   !}
+CCGen2 (abs (abs (var (i (i o))))) f fn {Q} p = {!   !}
+CCGen2 (abs (abs (app (var (i (i x))) L₁))) f fn {Q} p = {!   !}
+CCGen2 (abs (abs (app (app (var (i (i x))) L₂) L₁))) f fn {Q} p = {!   !}
+CCGen2 (abs (abs (app (app (var o) L₂) L₁))) f fn {Q} p with app≡inv (abs≡inv (abs≡inv p))
+... | p1 , p2 with CCGen2 L₁ (lift (lift f)) (λ {(i (i x)) → λ q → ext (Λ→i ∘ Λ→i) (fn x (occIni _ (occIni _ q)))
+                                                ; (i o) → λ q → exfalso (x∉Λ→i (Λ→ i (f (i o))) o (λ q2 → exfalso (o∉Λ→i (f (i o)) q2)) q)
+                                                 ; o → λ q → exfalso (o∉Λ→i (Λ→ i (f o)) q)}) {Q = L₂} p2 
+CCGen2 (abs (abs (app (app (var o) L₂) .(var o)))) f fn {Q} p | p1 , () | inl refl
+CCGen2 (abs (abs (app (app (var o) L₂) .(abs (var (i o)))))) f fn {Q} p | p1 , () | inr refl
+
+-- eq40gen : ∀ {X} (L : Λ (↑ X)) (f : ↑ X → Λ X) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → {Q : Λ (↑ (↑ X))}
+--      →  L [ f ] ≡ abs (abs (app (app (var o) Q) (Λ→i L))) → L ≡ var o 
+-- eq40gen (var x) f fn {Q} p = {!   !}
+-- eq40gen (abs (var x)) f fn {Q} p = {!   !}
+-- eq40gen (abs (abs (var x))) f fn {Q} p = {!   !}
+-- eq40gen (abs (abs (app (var x) L₁))) f fn {Q} p = {!   !}
+-- eq40gen (abs (abs (app (app L L₂) L₁))) f fn {Q} p with app≡inv (abs≡inv (abs≡inv p))
+-- ... | p1 , p2 =
+--    let rec = eq40gen L₁ (lift (lift f)) {!   !} (p2 ! abs≡ (abs≡ (app≡ {!   !} {!   !})))
+--    in {!   !}
+
+
+-- eq40 : ∀ {X} (L : Λ (↑ X)) (P : Λ X) f → bind f L ≡ abs (abs (app (app (var o) (Λ→i (Λ→i P))) (Λ→i L))) → L ≡ var o
+-- eq40 (var x) P f p = {!   !}
+-- eq40 (abs (var x)) P f p = {!   !}
+-- eq40 (abs (abs (var x))) P f p = {!   !}
+-- eq40 (abs (abs (app (var x) L₁))) P f p = {!   !}
+-- eq40 (abs (abs (app (app (var (i x)) L₂) L₁))) P f p = {!   !}
+-- eq40 (abs (abs (app (app (var o) L₂) L₁))) P f p with app≡inv (abs≡inv (abs≡inv p))
+-- ... | p1 , p2 =
+--     let rec = eq40 L₁ (L₂ [ I ]ₒ) (lift (lift f)) (p2 ! abs≡ (abs≡ (app≡ (app≡ refl {! unweaken L₂ ? {M = I}  !}) {!   !}))) 
+--     in {!   !}
+
 eq21 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → dec X → L [ io (io var P) Q ] ≡ app (app (abs (abs L)) P) Q → pure (app (app (abs (abs L)) P) Q) → TwoCycleSolutions {X}
 eq21 (var (i (i x))) P Q d () np
 eq21 (var (i o)) P Q d p np = inf (inf21 refl p)
@@ -160,22 +213,50 @@ eq21 {X} (app (app (var o) L2) .(var (i o))) P .P d p np | p1 , refl | inr L3has
         c22 = λ {refl → exfalso (len≡≠ _ _ p3 λ ql → ¬S4≤ (++≤LN O (≡≤≡ (~ len→ i P ! ~ (len→ i (Λ→ i P))))) ql)}
         c2 = λ q → case c21 c22 (lercherEq3Io L2 P q)
     in case c1 c2 lercherEq3Call1
-... | inr L3isntX = 
-    let bindrec1 : (i o) ∈ L2 → L2 ≡ var (i o)  
-        bindrec1 = λ {q → bind-rec L2 _ q p4}
-        bindrec2 : (i o) ∈ L3 → L3 ≡ var (i o)  
-        -- P4 into P2
-        -- Bind (io (io var P) (L3 [ p ,, q ])) L2 = P
-        bindrec2 = λ {q → let eqPfC = eqPf L3 P Q
-                              ds2 = doubleSubSub2 L3 P _ Q Q (~ p4) refl
-                              replace2 = eqPfC ! ds2
-                              ds = doubleSubSub L3 P (bind (io (io var P) Q) L2) Q Q (~ p4) refl
-                              replace = ~ ds ! p2
-                              bl = bind-law (lift (io var (bind (io (io var P) Q) L2))) (io var Q) L3
-                              blr = bl ! ~ replace2
-                              bindrec = {!   !}
-                          in {!   !}}
-    in exfalso (L3isntX (bindrec2 ioInL3))
+... | inr L3isntX with decTop L2
+eq21 (app (app (var o) .(var o)) L3) P .P d p np | p1 , p2 | inr L3hasnoY | p3 , refl | inl ioInL3 | inr L3isntX | inl refl = exfalso (L3isntX (bind-rec L3 (io (io var P) P) {x = i o} ioInL3 p2))
+... | inr L2isntVar = 
+    let -- L4 = L2 [ (L3 [ Λ→i Q ]ₒ) ]ₒ
+        -- noOinL3Subs = occurs-map (L3 [ lift (io var P) ]) _ _ (~ eqPf L3 P Q ! p2) λ q → L3hasnoY (bind-oo (lift (io var P)) L3 (λ {(i (i x)) → λ ()
+        --                                                                                                                           ; (i o) → λ q → exfalso (o∉Λ→i P q)
+        --                                                                                                                           ; o → λ _ → refl}) q)
+        -- oInL4isO : o ∈ L4 → L4 ≡ var o
+        -- oInL4isO = λ {q → bind-rec L4 (io var P) {x = o} q (~ bind-law (io var (L3 [ Λ→i Q ]ₒ)) (io var P) L2 ! (bind-ext (λ {(i (i x)) → refl
+        --                                                                                                                     ; (i o) → refl
+        --                                                                                                                     ; o → ~ bind-law (io var (Λ→i Q)) (io var P) L3 ! bind-ext (λ {(i (i x)) → refl
+        --                                                                                                                                                                                  ; (i o) → refl
+        --                                                                                                                                                                                  ; o → NoBindOnWeaking Q P}) L3 ! p2}) L2 ! p4))}
+        -- oL2oL4 : o ∈ L2 → L4 ≡ var o
+        -- oL2oL4 = λ {q → oInL4isO (∈[∈]2 q _ (bind-io L3 (io var (Λ→ i Q)) o ioInL3 here))}
+        -- L2IsntX : L2 ≡ var (i o) → ⊥
+        -- L2IsntX = {!   !}
+        -- ioNotInL2 : (i o) ∈ L2 → ⊥
+        -- ioNotInL2 = λ q → L2IsntX (bind-rec L2 (io (io var P) Q) {x = i o} q p4)
+        -- L4isntVar : L4 ≡ var o → ⊥
+        -- L4isntVar = (λ { q → case (λ {refl → L2IsntX refl}) (λ q2 → L3isntX (eq21Helper L3 Q q2)) (eq21HelperIo L2 (L3 [ Λ→i Q ]ₒ) q) }) 
+        -- noOinL2 : o ∈ L2 → ⊥
+        -- noOinL2 = λ {q → L4isntVar (oL2oL4 q)}
+        c1 = λ {refl → exfalso (L3hasnoY here)}
+        c2 = λ {refl → exfalso (L3hasnoY (down here))}
+    in {!   !} -- case c1 c2 (CCGen2 L3 (io (io var P) Q) (λ x _ → refl) {Q = L2} (p2 ! p3))
+
+    -- let bindrec0 : o ∈ L2 → ⊥
+    --     bindrec0 = λ {q → case (λ {refl → {!   !}}) (λ q2 → q2 {!   !}) (decTop L2)}
+    --     bindrec1 : (i o) ∈ L2 → L2 ≡ var (i o)  
+    --     bindrec1 = λ {q → bind-rec L2 (io (io var P) Q) q p4}
+    --     bindrec2 : (i o) ∈ L3 → L3 ≡ var (i o)  
+    --     -- P4 into P2
+    --     -- Bind (io (io var P) (L3 [ p ,, q ])) L2 = P
+    --     bindrec2 = λ {q → let eqPfC = eqPf L3 P Q
+    --                         --   ds2 = doubleSubSub2 L3 P _ Q Q (~ p4) refl
+    --                         --   replace2 = eqPfC ! ds2
+    --                         --   ds = doubleSubSub L3 P (bind (io (io var P) Q) L2) Q Q (~ p4) refl
+    --                         --   replace = ~ ds ! p2
+    --                         --   bl = bind-law (lift (io var (bind (io (io var P) Q) L2))) (io var Q) L3
+    --                         --   blr = bl ! ~ replace2
+    --                         --   bindrec = {!   !}
+    --                       in {!   !}}
+    -- in exfalso (L3isntX (bindrec2 ioInL3))
 eq21 {X} (app (app (var o) L2) L3) P Q d p np | p1 , p2 | inr L3hasnoY | p3 , p4 | inr ioNotInL3 =
     let doubleSub = ~ eqPf L3 P Q ! p2
         OccursMapCall = occurs-map (L3 [ lift (io var P) ]) _ _ doubleSub λ q → L3hasnoY (bind-o _ L3 q)
