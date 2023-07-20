@@ -79,6 +79,7 @@ eq24 (app L1 L2) P Q d p np with app≡inv p
 ... | (p1 , p2) with eq24L2 L2 P Q p2
 -- This is eq28
 -- All cases lead to something...
+-- eq24 (app L1 .(var o)) P Q d p np | p1 , p2 | inl refl = {!   !} -- exfalso (cheat (pure1 {!   !} ) )
 -- Real Solution
 eq24 (app (var (i o)) .(var o)) P Q d p np | p1 , p2 | inl refl = {!   !} -- exfalso (cheat (pure1 {!   !} ) )
 -- This is a contradiction, due to purity
@@ -87,13 +88,30 @@ eq24 (app (var o) .(var o)) P Q d p np | p1 , p2 | inl refl = {!   !}
 eq24 (app (abs L1) .(var o)) P Q d p np | p1 , p2 | inl refl = {!   !}
 -- This is eq29 {Following 3 statements}
 -- This is a real solution, assuming L2[Q] is in NF
+-- impure solution
 eq24 (app (var (i o)) L2) P Q d p np | p1 , p2 | inr L2hasnoX = {!   !}
 -- This is a contradiction, since you get a term with 2 redexes
+-- Impure...
 eq24 (app (var o) L2) P Q d p np | p1 , p2 | inr L2hasnoX = {!   !}
 eq24 (app (abs L1) L2) P Q d p np | p1 , p2 | inr L2hasnoX with np (contr ((app (app (abs (abs (app (L1 [ L2 ]ₒ) (var (i o))))) P) Q)) (appL→ (appL→ (abs→ (abs→ (appL→ (redex L1 L2)))))))
                                                                    (contr _ (appL→ (redex (abs (app (app (abs L1) L2) (var (i o)))) P)))
 ... | ()
 
+fP : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → (L [ lift (io var P) ]) [ io var Q ] ≡ L [ io (io var P) Q ]
+fP (var (i (i x))) P Q = refl
+fP (var (i o)) P Q = {!   !}
+fP (var o) P Q = refl
+fP (app L L₁) P Q = {!   !}
+fP (abs L) P Q = {!   !}
+
+
+eq21check2 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → app (app (abs (abs L)) P ) Q ⇒ ((L [ io var (Λ→ i Q) ]) [ io var P ])
+eq21check2 L P Q = 
+  let step1 = appL→ {Z = Q} (redex (abs L) P)
+      step2 : app (abs L [ P ]ₒ) Q ⇒ ((L [ lift (io var P) ]) [ io var Q ])
+      step2 = c* (redex _ _) (ε* (bind (io var Q) (bind (lift (io var P)) L)))
+      total = c* step1 {!   !}
+  in {!   !}
 
 eq21check : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → app (app (abs (abs L)) P ) Q ⇒ (L [ io (io var P) Q ])
 eq21check L P Q =
@@ -104,7 +122,7 @@ eq21check L P Q =
       e = λ {  o → refl ; (i o) → NoBindOnWeaking P Q ; (i (i x)) → refl }
       eq : bind (io var Q) (bind (lift (io var P)) L) ≡  (L [ io (io var P) Q ])
       eq = ((~ bind-law ((lift (io var P))) ((io var Q)) L ))  ! bind-ext e L
-      eq2 = {!   (var o) [ io (io var P) Q ]  !}
+      s = {!   !}
     in transp (λ z → app (app (abs (abs L)) P) Q ⇒ z) eq (c* step1 step2)
 
 eq21 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → dec X → (L [ Λ→i P ]ₒ) [ Q ]ₒ ≡ app (app (abs (abs L)) P) Q → pure (app (app (abs (abs L)) P) Q) → ⊥
@@ -159,7 +177,7 @@ eq21 (app (app (abs L1) L2) L3) P Q d p np | p1 , p2 | inr L3hasnoY | p11 , p12 
 -- -- If you walk along the following path:
 -- -- M≡(\x.\y.L[x,y])PQ → (\y.L[P,y])Q → L[P,Q]≡M
 -- -- Then, Q ≡ \xy.yxy OR P ≡ Q × (P ≡ \xy.yxx OR \xy.yyx) OR Q ≡ \xy.y?y where ? doesn't contain b as the LHS of App
--- PA2 : ∀ (L : Λ (↑ (↑ ⊥))) (P Q t1 t2 : Λ ⊥) → app (app (abs (abs L)) P) Q ⟶ t1 → t1 ≡ app ((abs L) [ P ]ₒ) Q → app ((abs L) [ P ]ₒ) Q ⟶ t2 → t2 ≡ L [ Λ→i P ]ₒ [ Q ]ₒ → ⊥
--- PA2 L P Q .(app (abs L [ P ]ₒ) Q) .(bind (lift (io var P)) L [ Q ]ₒ) (appL→ (redex .(abs L) .P)) p1 (redex .(bind (lift (io var P)) L) .Q) p2 = {!   !}
--- PA2 L P Q .(app (abs L [ P ]ₒ) Q) .(app _ Q) (appL→ (redex .(abs L) .P)) p1 (appL→ r2) p2 = {!   !}
--- PA2 L P Q .(app (abs L [ P ]ₒ) Q) .(app (abs L [ P ]ₒ) _) (appL→ (redex .(abs L) .P)) p1 (appR→ r2) p2 = {!   !}
+PA2 : ∀ (L : Λ (↑ (↑ ⊥))) (P Q t1 t2 : Λ ⊥) → app (app (abs (abs L)) P) Q ⟶ t1 → t1 ≡ app ((abs L) [ P ]ₒ) Q → app ((abs L) [ P ]ₒ) Q ⟶ t2 → t2 ≡ L [ Λ→i P ]ₒ [ Q ]ₒ → ⊥
+PA2 L P Q .(app (abs L [ P ]ₒ) Q) .(bind (lift (io var P)) L [ Q ]ₒ) (appL→ (redex .(abs L) .P)) p1 (redex .(bind (lift (io var P)) L) .Q) p2 = {!   !}
+PA2 L P Q .(app (abs L [ P ]ₒ) Q) .(app _ Q) (appL→ (redex .(abs L) .P)) p1 (appL→ r2) p2 = {!   !}
+PA2 L P Q .(app (abs L [ P ]ₒ) Q) .(app (abs L [ P ]ₒ) _) (appL→ (redex .(abs L) .P)) p1 (appR→ r2) p2 = {!   !}

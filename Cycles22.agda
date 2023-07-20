@@ -94,7 +94,7 @@ NBOWLemma (abs P) Q f g fn = abs≡ (NBOWLemma P (Λ→ i Q) (lift f) (↑→ g)
 NoBindOnWeaking : ∀ {X} (P Q : Λ X) → (Λ→ i P) [ Q ]ₒ ≡ P
 NoBindOnWeaking P Q = NBOWLemma P Q (io var Q) i (λ x _ → refl)
 
-BindWithTerms : ∀ {X} (L : Λ (↑ (↑ X))) (P : Λ X) (Q : Λ X) → (L [ Λ→i P ]ₒ) [ Q ]ₒ ≡ bind (io (io var Q) P) L
+BindWithTerms : ∀ {X} (L : Λ (↑ (↑ X))) (P : Λ X) (Q : Λ X) → (L [ Λ→i P ]ₒ) [ Q ]ₒ ≡ L 
 BindWithTerms (var (i (i x))) P Q = refl
 BindWithTerms (var (i o)) P Q = refl
 BindWithTerms (var o) P Q = NoBindOnWeaking P Q
