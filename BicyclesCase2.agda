@@ -162,42 +162,46 @@ eq21Helper (var o) N p = exfalso ((o∉Λ→i N) (var∈≡ (Λ→ i N) o p))
 --    let rec = eq40gen L₁ (lift (lift f)) {!   !} (p2 ! abs≡ (abs≡ (app≡ {!   !} {!   !})))
 --    in {!   !}
 
-eq40lemma : ∀ {X} (L : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ X) (fn : (∀ x → x ∈ f (i (i x)) → f (i (i x)) ≡ var x)) {x} → L [ f ] ≡ abs (abs (app (app (var o) (var x)) L)) → L ≡ var x
-eq40lemma L f fn {x} p = {!   !}
+-- eq40lemmaO : ∀ {X} (L : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ X) (fn : (∀ x → x ∈ f (i (i x)) → f (i (i x)) ≡ var x)) → L [ f ] ≡ abs (abs (app (app (var o) (var o)) L)) → L ≡ var o
+-- eq40lemmaO (var x) f fn pf = {!   !}
+-- eq40lemmaO (abs L) f fn pf = {!   !}
 
--- eq40 : ∀ {X} (L3 L2 : Λ (↑ (↑ X))) (x : ↑ (↑ X)) → x ∈ L3 → ∀ (f : ↑ (↑ X) → Λ X) (fn : (∀ y → i (i y) ∈ L3 → y ∈ f x → ⊥)) → L3 [ f ] ≡ abs (abs (app (app (var o) L2) L3)) → L3 ≡ var x
-eq40 : ∀ {X} (L3 : Λ (↑ (↑ X))) (x : ↑ (↑ X)) → x ∈ L3 → ∀ (f : ↑ (↑ X) → Λ X) (fn : Set) → L3 [ f ] ≡ abs (abs (app (app (var o) (Λ→i (Λ→i (f x)))) L3)) → L3 ≡ var x
-eq40 (var x₁) .x₁ here f fn p = refl
-eq40 (abs (var .(i o))) o (down here) f fn p with abs≡inv p
-... | p1 with bind-rec (abs (app (app (var o) (var (i o))) (abs (var (i o))))) (io var (Λ→i (f o))) (down (left (right _ here) _) ) (~ p1)
-... | ()
-eq40 (abs (var .(i (i x)))) (i x) (down here) f fn p with abs≡inv p
--- ... | p1 with bind-rec (abs (app (app (var o) (var (i o))) (abs (var (i (i x)))))) (io var (Λ→i (f x))) (down (left (right _ here) _)) (~ (p1 ! {!   !} ) )
-... | p1 with bind-rec (abs (app (app (var o) (var (i o))) (var (i (i o))))) (io (io var _) (Λ→i (f (i x)))) (down (left (right _ here) _))
-                        (~ (p1 ! abs≡ (ext (app _) (abs≡ refl ) ) ) )
-... | ()
-eq40 (abs (abs (var .(i (i x))))) x (down (down here)) f fn p with abs≡inv (abs≡inv p)
-... | p1 with bind-rec (app (app (var (i o)) (var o)) (abs (abs (var (i (i (i x)))))) ) (io var (Λ→i (Λ→ i (f x)))) (left (right  _ here) _) (~ p1)
-... | ()
-eq40 (abs (abs (app L3 L4))) x (down (down (left occ .L4))) f fn p with app≡inv (abs≡inv (abs≡inv p))
-eq40 (abs (abs (app (var .(i (i x))) L4))) x (down (down (left here .L4))) f fn p | p1 , p2 = exfalso (o∉Λ→i _ (left here _ ∈≡ (~ p1)) )
-eq40 (abs (abs (app (app L3 L5) L4))) x (down (down (left occ .L4))) f fn p | p1 , p2 with app≡inv p1
-eq40 (abs (abs (app (app (var (i y)) L5) L4))) x (down (down (left occ .L4))) f fn p | p1 , p2 | p3 , p4 = exfalso (o∉Λ→i (lift f y) (here ∈≡ (~ p3) ) )
-eq40 (abs (abs (app (app (var o) L5) L4))) x (down (down (left (right .(var o) occ) .L4))) f fn p | p1 , p2 | p3 , p4
-      with bind-rec L5 (lift (lift f)) occ p4
-... | refl with eq40lemma L4 (lift (lift f)) {!   !} {i (i x)} p2
-eq40 (abs (abs (app (app (var o) .(var (i (i (i (i x)))))) .(var (i (i (i (i x)))))))) (i (i x)) (down (down (left (right .(var o) occ) .(var (i (i (i (i x)))))))) f fn p | p1 , p2 | p3 , p4 | refl | refl = {!   !}
-eq40 (abs (abs (app (app (var o) .(var (i (i (i o))))) .(var (i (i (i o))))))) (i o) (down (down (left (right .(var o) occ) .(var (i (i (i o))))))) f fn p | p1 , p2 | p3 , p4 | refl | refl = {!   !}
-eq40 (abs (abs (app (app (var o) .(var (i (i o)))) .(var (i (i o)))))) o (down (down (left (right .(var o) occ) .(var (i (i o)))))) f fn p | p1 , p2 | p3 , p4 | refl | refl = {!   !}
--- bind-rec L4 (lift (lift f)) {!   !} p2
-eq40 (abs (abs (app L3 L4))) x (down (down (right .L3 occ))) f fn p with app≡inv (abs≡inv (abs≡inv p))
-eq40 (abs (abs (app (var (i (i y))) L4))) x (down (down (right .(var (i (i y))) occ))) f fn p | p1 , p2 = exfalso (o∉Λ→i (Λ→ i (f y)) ((left here _) ∈≡ (~ p1) ) )
-eq40 (abs (abs (app (app (var y) L5) L4))) x (down (down (right .(app (var y) L5) occ))) f fn p | p1 , p2 with app≡inv p1
-eq40 (abs (abs (app (app (var (i y)) L5) L4))) x (down (down (right .(app (var (i y)) L5) occ))) f fn p | p1 , p2 | p3 , p4 = exfalso (o∉Λ→i (lift f y) (here ∈≡ (~ p3) ) )
-eq40 (abs (abs (app (app (var o) L5) L4))) x (down (down (right .(app (var o) L5) occ))) f fn p | p1 , p2 | p3 , p4
-  with eq40 L4 _ occ (lift (lift f)) _ (p2 ! abs≡ (abs≡ (app≡ (ext (app (var o)) goal ) refl  )))
-       where goal = ? -- {!   !} ! ext Λ→i (ext Λ→i p4 )
-... | refl = {! x  !}
+-- eq40lemma : ∀ {X} (L : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ X) (fn : (∀ x → x ∈ f (i (i x)) → f (i (i x)) ≡ var x)) {x} → L [ f ] ≡ abs (abs (app (app (var o) (var x)) L)) → L ≡ var x
+-- eq40lemma L f fn {x} p = {!   !}
+
+-- -- eq40 : ∀ {X} (L3 L2 : Λ (↑ (↑ X))) (x : ↑ (↑ X)) → x ∈ L3 → ∀ (f : ↑ (↑ X) → Λ X) (fn : (∀ y → i (i y) ∈ L3 → y ∈ f x → ⊥)) → L3 [ f ] ≡ abs (abs (app (app (var o) L2) L3)) → L3 ≡ var x
+-- eq40 : ∀ {X} (L3 : Λ (↑ (↑ X))) (x : ↑ (↑ X)) → x ∈ L3 → ∀ (f : ↑ (↑ X) → Λ X) (fn : Set) → L3 [ f ] ≡ abs (abs (app (app (var o) (Λ→i (Λ→i (f x)))) L3)) → L3 ≡ var x
+-- eq40 (var x₁) .x₁ here f fn p = refl
+-- eq40 (abs (var .(i o))) o (down here) f fn p with abs≡inv p
+-- ... | p1 with bind-rec (abs (app (app (var o) (var (i o))) (abs (var (i o))))) (io var (Λ→i (f o))) (down (left (right _ here) _) ) (~ p1)
+-- ... | ()
+-- eq40 (abs (var .(i (i x)))) (i x) (down here) f fn p with abs≡inv p
+-- -- ... | p1 with bind-rec (abs (app (app (var o) (var (i o))) (abs (var (i (i x)))))) (io var (Λ→i (f x))) (down (left (right _ here) _)) (~ (p1 ! {!   !} ) )
+-- ... | p1 with bind-rec (abs (app (app (var o) (var (i o))) (var (i (i o))))) (io (io var _) (Λ→i (f (i x)))) (down (left (right _ here) _))
+--                         (~ (p1 ! abs≡ (ext (app _) (abs≡ refl ) ) ) )
+-- ... | ()
+-- eq40 (abs (abs (var .(i (i x))))) x (down (down here)) f fn p with abs≡inv (abs≡inv p)
+-- ... | p1 with bind-rec (app (app (var (i o)) (var o)) (abs (abs (var (i (i (i x)))))) ) (io var (Λ→i (Λ→ i (f x)))) (left (right  _ here) _) (~ p1)
+-- ... | ()
+-- eq40 (abs (abs (app L3 L4))) x (down (down (left occ .L4))) f fn p with app≡inv (abs≡inv (abs≡inv p))
+-- eq40 (abs (abs (app (var .(i (i x))) L4))) x (down (down (left here .L4))) f fn p | p1 , p2 = exfalso (o∉Λ→i _ (left here _ ∈≡ (~ p1)) )
+-- eq40 (abs (abs (app (app L3 L5) L4))) x (down (down (left occ .L4))) f fn p | p1 , p2 with app≡inv p1
+-- eq40 (abs (abs (app (app (var (i y)) L5) L4))) x (down (down (left occ .L4))) f fn p | p1 , p2 | p3 , p4 = exfalso (o∉Λ→i (lift f y) (here ∈≡ (~ p3) ) )
+-- eq40 (abs (abs (app (app (var o) L5) L4))) x (down (down (left (right .(var o) occ) .L4))) f fn p | p1 , p2 | p3 , p4
+--       with bind-rec L5 (lift (lift f)) occ p4
+-- ... | refl with eq40lemma L4 (lift (lift f)) {!   !} {i (i x)} p2
+-- eq40 (abs (abs (app (app (var o) .(var (i (i (i (i x)))))) .(var (i (i (i (i x)))))))) (i (i x)) (down (down (left (right .(var o) occ) .(var (i (i (i (i x)))))))) f fn p | p1 , p2 | p3 , p4 | refl | refl = {!   !}
+-- eq40 (abs (abs (app (app (var o) .(var (i (i (i o))))) .(var (i (i (i o))))))) (i o) (down (down (left (right .(var o) occ) .(var (i (i (i o))))))) f fn p | p1 , p2 | p3 , p4 | refl | refl = {!   !}
+-- eq40 (abs (abs (app (app (var o) .(var (i (i o)))) .(var (i (i o)))))) o (down (down (left (right .(var o) occ) .(var (i (i o)))))) f fn p | p1 , p2 | p3 , p4 | refl | refl = {!   !}
+-- -- bind-rec L4 (lift (lift f)) {!   !} p2
+-- eq40 (abs (abs (app L3 L4))) x (down (down (right .L3 occ))) f fn p with app≡inv (abs≡inv (abs≡inv p))
+-- eq40 (abs (abs (app (var (i (i y))) L4))) x (down (down (right .(var (i (i y))) occ))) f fn p | p1 , p2 = exfalso (o∉Λ→i (Λ→ i (f y)) ((left here _) ∈≡ (~ p1) ) )
+-- eq40 (abs (abs (app (app (var y) L5) L4))) x (down (down (right .(app (var y) L5) occ))) f fn p | p1 , p2 with app≡inv p1
+-- eq40 (abs (abs (app (app (var (i y)) L5) L4))) x (down (down (right .(app (var (i y)) L5) occ))) f fn p | p1 , p2 | p3 , p4 = exfalso (o∉Λ→i (lift f y) (here ∈≡ (~ p3) ) )
+-- eq40 (abs (abs (app (app (var o) L5) L4))) x (down (down (right .(app (var o) L5) occ))) f fn p | p1 , p2 | p3 , p4
+--   with eq40 L4 _ occ (lift (lift f)) _ (p2 ! abs≡ (abs≡ (app≡ (ext (app (var o)) goal ) refl  )))
+--        where goal = {!   !} -- {!   !} ! ext Λ→i (ext Λ→i p4 )
+-- ... | refl = {! x  !}
 
 -- eq40 (var y) P .y here f p = refl
 -- eq40 (abs (var y)) P (i (i x)) occ f p = {!   !}
@@ -216,6 +220,100 @@ eq40 (abs (abs (app (app (var o) L5) L4))) x (down (down (right .(app (var o) L5
 -- ... | p1 , p2 =
 --     let rec = eq40 L₁ (L₂ [ I ]ₒ) (lift (lift f)) (p2 ! abs≡ (abs≡ (app≡ (app≡ refl {! unweaken L₂ ? {M = I}  !}) {!   !})))
 --     in {!   !}
+
+liftProof : ∀ {X} (f : ↑ (↑ X) → Λ X) → ((x : X) → x ∈ f (i (i x)) → f (i (i x)) ≡ var x) → ((x : ↑ (↑ X)) → x ∈ Λ→i (Λ→i (f x)) → Λ→i (Λ→i (f x)) ≡ var x)
+liftProof f fn = (λ {(i (i x)) → λ q → ext (Λ→i ∘ Λ→i) (fn x (occIni _ (occIni _ q)))
+                                                ; (i o) → λ q → exfalso (x∉Λ→i (Λ→ i (f (i o))) o (λ q2 → exfalso (o∉Λ→i (f (i o)) q2)) q)
+                                                 ; o → λ q → exfalso (o∉Λ→i (Λ→ i (f o)) q)})
+
+
+liftLemma : ∀ {X} (M : Λ (↑ (↑ X))) (T : Λ X) (f : (↑ (↑ X)) → Λ X) x y → y ∈ f x → M [ f ] ≡ T → x ∈ M → y ∈ T
+liftLemma .(var x) T f x y occ1 pf here = occ1 ∈≡ pf
+liftLemma .(app _ t) (app T T₁) f x y occ1 pf (left occ2 t) = left (liftLemma _ T f x y occ1 (_×_.fst (app≡inv pf)) occ2) T₁
+liftLemma .(app s _) (app T T₁) f x y occ1 pf (right s occ2) = right T (liftLemma _ T₁ f x y occ1 (_×_.snd (app≡inv pf)) occ2)
+liftLemma .(abs _) (abs T) f x y occ1 pf (down occ2) = down (liftLemma _ T (lift f) (i x) (i y) (InjOcc i iInj y (f x) occ1) (abs≡inv pf) occ2)
+
+eq40O : ∀ {X} (L3 T : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ X) (fn : (∀ x → x ∈ f (i (i x)) → f (i (i x)) ≡ var x)) → L3 [ f ] ≡ abs (abs (app (app (var o) T) L3)) → o ∈ T ⊔ ((i o) ∈ T ⊔ (L3 ≡ var o ⊔ (L3 ≡ var (i o) ⊔ L3 ≡ abs (var (i o))))) 
+eq40O (var (i (i x))) T f fn pf with ~ pf ! fn x (transp (λ z → x ∈ z) (~ pf) (down (down (right (app (var o) T) here))))
+... | ()
+eq40O (var (i o)) T f fn pf = inr (inr (inr (inl refl)))
+eq40O (var o) T f fn pf = inr (inr (inl refl))
+eq40O (abs (var (i (i (i x))))) T f fn pf with abs≡inv pf
+... | p1 with ~ p1 ! ext Λ→i (fn x (occIni (f (i (i x))) (down (right (app (var o) T) (down here)) ∈≡ (~ p1))))
+... | ()
+eq40O (abs (var (i (i o)))) T f fn pf = exfalso (o∉Λ→i (f (i o)) (down (right (app (var o) T) (down here)) ∈≡ (~ (abs≡inv pf))))
+eq40O (abs (var (i o))) T f fn pf = inr (inr (inr (inr refl)))
+eq40O (abs (abs (var (i (i x))))) T f fn pf with abs≡inv (abs≡inv pf)
+... | p1 = exfalso (o∉Λ→i (Λ→i (f x)) (left (left here T) (abs (abs (var (i (i x))))) ∈≡ (~ p1)))
+eq40O (abs (abs (app (var (i (i x))) L4))) T f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 = exfalso (o∉Λ→i (Λ→i (f x)) (left here T ∈≡ (~ p1)))
+eq40O (abs (abs (app (app (var (i (i x))) L5) L4))) T f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 with app≡inv p1
+... | p3 , p4 = exfalso (o∉Λ→i (Λ→i (f x)) (here ∈≡ (~ p3)))
+eq40O (abs (abs (app (app (var o) L5) L4))) T f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p12 , p2 with app≡inv p12
+... | p3 , p4 with eq40O L4 L5 (lift (lift f)) (liftProof f fn) p2
+... | inl x = inl (liftLemma L5 T (lift (lift f)) o o here p4 x)
+... | inr (inl x) = inr (inl (liftLemma L5 T (lift (lift f)) (i o) (i o) here p4 x))
+eq40O (abs (abs (app (app (var o) L5) .(var o)))) T f fn pf | p12 , () | p3 , p4 | inr (inr (inl refl))
+eq40O (abs (abs (app (app (var o) L5) .(var (i o))))) T f fn pf | p12 , () | p3 , p4 | inr (inr (inr (inl refl)))
+eq40O (abs (abs (app (app (var o) L5) .(abs (var (i o)))))) T f fn pf | p12 , () | p3 , p4 | inr (inr (inr (inr refl)))
+
+eq40lemmaIO : ∀ {X} (L : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ X) (fn : (∀ x → x ∈ f (i (i x)) → f (i (i x)) ≡ var x)) → L [ f ] ≡ abs (abs (app (app (var o) (var (i o))) L)) → L ≡ var (i o) ⊔ (L ≡ var o)
+eq40lemmaIO (var (i (i x))) f fn pf with ~ pf ! fn x (transp (λ z → x ∈ z) (~ pf) (down (down (right (app (var o) (var (i o))) here))))
+... | ()
+eq40lemmaIO (var (i o)) f fn pf = inl refl
+eq40lemmaIO (var o) f fn pf = inr refl
+eq40lemmaIO (abs (var (i (i (i x))))) f fn pf with abs≡inv pf
+... | p1 with ~ p1 ! ext Λ→i (fn x (occIni (f (i (i x))) (down (right (app (var o) (var (i o))) (down here)) ∈≡ (~ p1))))
+... | ()
+eq40lemmaIO (abs (var (i (i o)))) f fn pf with abs≡inv pf
+... | p1 = exfalso (o∉Λ→i (f (i o)) (down (right (app (var o) (var (i o))) (down here)) ∈≡ (~ p1)))
+eq40lemmaIO (abs (var (i o))) f fn pf with abs≡inv pf
+... | p1 = exfalso (o∉Λ→i (f o) (down (left (right (var o) here) (abs (var (i o)))) ∈≡ (~ p1)))
+eq40lemmaIO (abs (abs (var (i (i x))))) f fn pf with abs≡inv (abs≡inv pf)
+... | p1 = exfalso (o∉Λ→i (Λ→ i (f x)) (left (left here (var (i o))) (abs (abs (var (i (i x))))) ∈≡ (~ p1)))
+eq40lemmaIO (abs (abs (app (var (i (i x))) L₁))) f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 = exfalso (o∉Λ→i (Λ→ i (f x)) (left here (var (i o)) ∈≡ (~ p1)))
+eq40lemmaIO (abs (abs (app (app (var (i (i x))) L₂) L₁))) f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 with app≡inv p1
+... | p3 , p4 = exfalso (o∉Λ→i (Λ→ i (f x)) (here ∈≡ (~ p3)))
+eq40lemmaIO (abs (abs (app (app (var o) (var (i (i x)))) L₁))) f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 with app≡inv p1
+... | p3 , p4 = exfalso (x∉Λ→i (Λ→ i (f x)) o (λ q → o∉Λ→i (f x) q) (here ∈≡ (~ p4)))
+eq40lemmaIO (abs (abs (app (app (var o) (var (i o))) L))) f fn pf with eq40lemmaIO L (lift (lift f)) (liftProof f fn) ((_×_.snd (app≡inv (abs≡inv (abs≡inv pf))))) 
+... | inl x = inl (~ (_×_.snd (app≡inv (abs≡inv (abs≡inv pf)))) !  ext (bind (lift (lift f))) x)
+... | inr x = inr (~ (_×_.snd (app≡inv (abs≡inv (abs≡inv pf)))) !  ext (bind (lift (lift f))) x) -- 
+
+eqL1 : ∀ {X} (L2 : Λ (↑ (↑ X))) (f : ↑ (↑ X) → Λ X) (fn : (∀ x → x ∈ f (i (i x)) → f (i (i x)) ≡ var x)) → L2 [ f ] ≡ abs (abs (app (app (var o) L2) (var (i o)))) → L2 ≡ var o ⊔ (L2 ≡ var (i o) ⊔ L2 ≡ abs (var (i o)))
+eqL1 (var (i (i x))) f fn pf with ~ pf ! fn x (transp (λ z → x ∈ z) (~ pf) (down (down (left (right (var o) here) (var (i o))))))
+... | ()
+eqL1 (var (i o)) f fn pf = inr (inl refl)
+eqL1 (var o) f fn pf = inl refl
+eqL1 (abs (var (i (i (i x))))) f fn pf with abs≡inv pf
+... | p1 with ~ p1 ! ext Λ→i (fn x (occIni (f (i (i x))) (down (left (right (var o) (down here)) (var (i o))) ∈≡ (~ p1))))
+... | ()
+eqL1 (abs (var (i (i o)))) f fn pf = exfalso (o∉Λ→i (f (i o)) (down (right (app (var o) (abs (var (i (i o))))) here) ∈≡ (~ abs≡inv pf)))
+eqL1 (abs (var (i o))) f fn pf = inr (inr refl)
+eqL1 (abs (abs (var (i (i x))))) f fn pf with abs≡inv (abs≡inv pf)
+... | p1 = exfalso (o∉Λ→i (Λ→ i (f x)) (left (left here (abs (abs (var (i (i x)))))) (var (i o)) ∈≡ (~ p1)))
+eqL1 (abs (abs (app (var (i (i x))) L3))) f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 = exfalso (o∉Λ→i (Λ→ i (f x)) (left here (abs (abs (app (var (i (i x))) L3))) ∈≡ (~ p1)))
+eqL1 (abs (abs (app (app (var (i (i x))) L4) L3))) f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 with app≡inv p1
+... | p3 , p4 = exfalso (o∉Λ→i (Λ→ i (f x)) (here ∈≡ (~ p3)))
+eqL1 (abs (abs (app (app (var o) L4) (var (i (i x)))))) f fn pf with app≡inv (abs≡inv (abs≡inv pf))
+... | p1 , p2 = exfalso (x∉Λ→i (Λ→ i (f x)) o (λ q → o∉Λ→i (f x) q) (here ∈≡ (~ p2)))
+eqL1 (abs (abs (app (app (var o) L4) (var (i o))))) f fn pf with eqL1 L4 (lift (lift f)) (liftProof f fn) (_×_.snd (app≡inv (_×_.fst (app≡inv (abs≡inv (abs≡inv pf))))))
+... | inl x = inl ((~ (_×_.snd (app≡inv (_×_.fst (app≡inv (abs≡inv (abs≡inv pf))))))) ! ext (bind (lift (lift f))) x)
+... | inr (inl x) = inr (inl (((~ (_×_.snd (app≡inv (_×_.fst (app≡inv (abs≡inv (abs≡inv pf)))))))) ! ext (bind (lift (lift f))) x))
+... | inr (inr x) = inr (inr (((~ (_×_.snd (app≡inv (_×_.fst (app≡inv (abs≡inv (abs≡inv pf)))))))) ! ext (bind (lift (lift f))) x))
+
+exf1 : ∀ {X} → (i (o {X})) ∈ abs (var (i o)) → ⊥
+exf1 (down ())
+
+exf2 : ∀ {X} → (i (o {X})) ∈ var o → ⊥
+exf2 ()
 
 eq21 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → dec X → L [ io (io var P) Q ] ≡ app (app (abs (abs L)) P) Q → pure (app (app (abs (abs L)) P) Q) → TwoCycleSolutions {X}
 eq21 (var (i (i x))) P Q d () np
@@ -257,8 +355,8 @@ eq21 {X} (app (app (var o) L2) .(var (i o))) P .P d p np | p1 , refl | inr L3has
         c2 = λ q → case c21 c22 (lercherEq3Io L2 P q)
     in case c1 c2 lercherEq3Call1
 ... | inr L3isntX with decTop L2
-eq21 (app (app (var o) .(var o)) L3) P .P d p np | p1 , p2 | inr L3hasnoY | p3 , refl | inl ioInL3 | inr L3isntX | inl refl = exfalso (L3isntX (bind-rec L3 (io (io var P) P) {x = i o} ioInL3 p2))
-... | inr L2isntVar =
+eq21 {X = X} (app (app (var o) .(var o)) L3) P .P d p np | p1 , p2 | inr L3hasnoY | p3 , refl | inl ioInL3 | inr L3isntX | inl refl = exfalso (L3isntX (bind-rec L3 (io (io var P) P) {x = i o} ioInL3 p2))
+eq21 {X} (app (app (var o) L2) L3) P Q d p np | p1 , p2 | inr L3hasnoY | p3 , p4 | inl ioInL3 | inr L3isntX | inr L2isntVar = 
     let
         L4 = L2 [ (L3 [ Λ→i Q ]ₒ) ]ₒ
         noOinL3Subs = occurs-map (L3 [ lift (io var P) ]) _ _ (~ eqPf L3 P Q ! p2) λ q → L3hasnoY (bind-oo (lift (io var P)) L3 (λ {(i (i x)) → λ ()
@@ -272,17 +370,26 @@ eq21 (app (app (var o) .(var o)) L3) P .P d p np | p1 , p2 | inr L3hasnoY | p3 ,
                                                                                                                                                                                          ; o → NoBindOnWeaking Q P}) L3 ! p2}) L2 ! p4))}
         oL2oL4 : o ∈ L2 → L4 ≡ var o
         oL2oL4 = λ {q → oInL4isO (∈[∈]2 q _ (bind-io L3 (io var (Λ→ i Q)) o ioInL3 here))}
-        L2IsntX : L2 ≡ var (i o) → ⊥
-        L2IsntX = λ {refl → {!   !} }
-        ioNotInL2 : (i o) ∈ L2 → ⊥
+        L2IsntX : L2 ≡ var (i o) → TwoCycleSolutions {X}
+        L2IsntX = λ {refl → case (λ {refl → imp7 {X} (app≡ (app≡ (~ (p2 ! p3)) p4) (~ p2)) (p2 ! p3)}) (λ {refl → exfalso (exf2 {X} ioInL3)}) (eq40lemmaIO L3 (io (io var P) Q) (λ x _ → refl) (p2 ! p3)) }
+        ioNotInL2 : (i o) ∈ L2 → TwoCycleSolutions
         ioNotInL2 = λ q → L2IsntX (bind-rec L2 (io (io var P) Q) {x = i o} q p4)
-        L4isntVar : L4 ≡ var o → ⊥
-        L4isntVar = (λ { q → case (λ {refl → L2IsntX refl}) (λ q2 → L3isntX (eq21Helper L3 Q q2)) (eq21HelperIo L2 (L3 [ Λ→i Q ]ₒ) q) })
-        noOinL2 : o ∈ L2 → ⊥
+        L4isntVar : L4 ≡ var o → TwoCycleSolutions
+        L4isntVar = (λ { q → case (λ {refl → L2IsntX refl}) (λ q2 → exfalso (L3isntX (eq21Helper L3 Q q2))) (eq21HelperIo L2 (L3 [ Λ→i Q ]ₒ) q) })
+        noOinL2 : o ∈ L2 → TwoCycleSolutions
         noOinL2 = λ {q → L4isntVar (oL2oL4 q)}
         -- c1 = λ {refl → exfalso (L3hasnoY here)}
         -- c2 = λ {refl → exfalso (L3hasnoY (down here))}
-    in {!   !} -- case c1 c2 (CCGen2 L3 (io (io var P) Q) (λ x _ → refl) {Q = L2} (p2 ! p3))
+        eq40OCall = eq40O L3 L2 (io (io var P) Q) (λ x _ → refl) (p2 ! p3)    
+        c1 = λ q → noOinL2 q
+        c21 = λ q → ioNotInL2 q -- exfalso (ioNotInL2 q)
+        c221 = λ {refl → exfalso (exf2 {X} ioInL3)} -- ioIn3
+        c3 = λ {refl → case (λ q → noOinL2 (here ∈≡ (~ q))) (λ q → case (λ q2 → L2IsntX q2) (λ q2 → noOinL2 (down here ∈≡ (~ q2))) q) (eqL1 L2 (io (io var P) Q) (λ x _ → refl) (p4 ! p2 ! p3))}
+        c4 = λ {refl → exfalso (exf1 {X} ioInL3 )} -- ioIn3
+        c222 = λ q → case c3 c4 q
+        c22 = λ q → case c221 c222 q
+        c2 = λ q → case c21 c22 q
+    in case c1 c2 eq40OCall -- case c1 c2 (CCGen2 L3 (io (io var P) Q) (λ x _ → refl) {Q = L2} (p2 ! p3))
 
     -- let bindrec0 : o ∈ L2 → ⊥
     --     bindrec0 = λ {q → case (λ {refl → {!   !}}) (λ q2 → q2 {!   !}) (decTop L2)}
@@ -312,3 +419,4 @@ eq21 {X} (app (app (var o) L2) L3) P Q d p np | p1 , p2 | inr L3hasnoY | p3 , p4
 eq21 (app (app (abs L1) L2) L3) P Q d p np | p1 , p2 | inr L3hasnoY | p3 , p4 with np (contr _ (appL→ (redex (abs (app (app (abs L1) L2) L3)) P)))
                                                                                         (contr _ (appL→ (appL→ (abs→ (abs→ (appL→ (redex L1 L2)))))))
 ... | ()
+ 

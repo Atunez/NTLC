@@ -49,6 +49,7 @@ data TwoCycleSolutions {X : Set} : Set where
   imp4 : ∀ {M P Q : Λ X} {L : Λ (↑ (↑ X))} → M ≡ app Q Q → Q ≡ app (abs (abs (app (var o) L))) P → L [ io (io var P) Q ] ≡ Q → TwoCycleSolutions
   imp5 : ∀ {M P Q : Λ X} → M ≡ app (app P P) Q → P ≡ abs (abs (app (app (var (i o)) (var (i o))) (var o))) → TwoCycleSolutions
   imp6 : ∀ {M P Q : Λ X} {L : Λ (↑ (↑ X))} → M ≡ app (app P P) Q → P ≡ abs (abs (app (app (var (i o)) L) (var o))) → L [ io (io var P) Q ] ≡ P → TwoCycleSolutions
+  imp7 : ∀ {M P : Λ X} → M ≡ app (app P P) P → P ≡ abs (abs (app (app (var o) (var (i o))) (var (i o)))) → TwoCycleSolutions 
   -- infinite
   inf : InfiniteSolutions {X} → TwoCycleSolutions
 
