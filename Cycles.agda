@@ -14,7 +14,7 @@ bind-rec (abs A0) f (down occ) eq = exfalso (¬S≤ {len (bind (lift f) A0)}
                (ext len eq ≡≤ ((~ (len→ i (f _) )) ≡≤ len∈bind (lift f) A0 occ) ))
 
 occurs-map-gen2 : ∀ {X} (A : Λ (↑ (↑ X))) (B : Λ X) (f : ↑ (↑ X) → Λ (↑ X)) → (∀ x → (i x) ∈ A → x ∈ f (i x)) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → A [ f ] ≡ Λ→ i B → ¬ (i o ∈ A) → ¬ (o ∈ A) → A ≡ Λ→i (Λ→ i B)
-occurs-map-gen2 A B f fn1 fn2 e nocc1 nocc2 = 
+occurs-map-gen2 A B f fn1 fn2 e nocc1 nocc2 =
   let e0 : ∀ x → x ∈ A → var x ≡ (Λ→ i ∘ f) x
       e0 = λ {(i (i x)) → λ q → ~ ext Λ→i (fn2 (i x) (fn1 (i x) q))
             ; (i o) → λ q → exfalso (nocc1 q)
@@ -24,7 +24,7 @@ occurs-map-gen2 A B f fn1 fn2 e nocc1 nocc2 =
   in ((~ bind-unit1 A ! e2) ! e1 A) ! ext (Λ→i) e
 
 occurs-map-gen : ∀ {X} (A : Λ (↑ X)) (B : Λ X) (f : ↑ X → Λ X) → (∀ x → (i x) ∈ A → x ∈ f (i x)) → (∀ x → x ∈ f (i x) → f (i x) ≡ var x) → A [ f ] ≡ B → ¬ (o ∈ A) → A ≡ Λ→i B
-occurs-map-gen A B f fn1 fn2 e nocc =  
+occurs-map-gen A B f fn1 fn2 e nocc =
   let e0 : ∀ x → x ∈ A → var x ≡ (Λ→ i ∘ f) x
       e0 = λ {(i x) → λ q → ~ ext Λ→i (fn2 x (fn1 x q))
             ; o → λ q → exfalso (nocc q)}
@@ -34,7 +34,7 @@ occurs-map-gen A B f fn1 fn2 e nocc =
 
 occurs-map : ∀ {X} (A : Λ (↑ X)) (B C : Λ X) → A [ C ]ₒ ≡ B → ¬ (o ∈ A) → A ≡ Λ→ i B
 occurs-map A B C h nocc = occurs-map-gen A B (io var C) (λ x _ → here) (λ x _ → refl) h nocc
-  
+
 decTop : ∀ {X} (A : Λ (↑ X)) → A ≡ var o ⊔ ¬ (A ≡ var o)
 decTop (var (i x)) = inr (λ { () })
 decTop (var o) = inl refl
@@ -91,5 +91,3 @@ lercher (app P1 P2) Q prf =
        l1 = lercherEq2 _ _ _ lhs
        l2 = lercherEq3 P2 Q rhs
    in lercherHelper _ _ _ l1 l2 prf
-
- 
