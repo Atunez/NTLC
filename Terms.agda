@@ -24,6 +24,9 @@ I = abs (var o)
 ω : ∀ {X} → Λ X
 ω = abs (app (var o) (var o))
 
+Ω : ∀ {X} → Λ X
+Ω = app ω ω 
+
 -- Congruence for constructors
 var≡ : ∀ {X} {x y : X} → x ≡ y → var x ≡ var y
 var≡ = ext var

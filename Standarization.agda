@@ -12,6 +12,17 @@ data _→s_ {X : Set} : Rel (Λ X) where
   abs→s : ∀ {M} {N} → M →s N → abs M →s abs N
   append→s : ∀ {M M' N} → M →w M' → M' →s N → M →s N
 
+w2⟶ : ∀ {X : Set} {t u : Λ X} → t →w u → t ⟶ u
+w2⟶ ε→w = redex _ _
+w2⟶ (Z c→w tu) = appL→ (w2⟶ tu)
+
+s2β : ∀ {X : Set} {t u : Λ X} → t →s u → t ⇒ u
+s2β ε→s = ε* (var _)
+s2β (app→s tu1 tu2) =
+  appendR (appL⇒ (s2β tu1) ) (appR⇒ (s2β tu2) )
+s2β (abs→s tu) = abs⇒ (s2β tu)
+s2β (append→s x tu) = c* (w2⟶ x) (s2β tu)
+
 refl→s :  ∀ {X : Set} (M : Λ X) → M →s M
 refl→s (var x) = ε→s
 refl→s (app M M₁) = app→s (refl→s M) (refl→s M₁)
@@ -28,17 +39,17 @@ wtos (Z c→w red) = app→s (wtos red) (refl→s Z)
 ≡→w = ≡R {R = _→w_}
 
 i→w : ∀ {X : Set} {x y : Λ X} → x →w y → Λ→i x →w Λ→i y
-i→w {X} {(app (abs M) N)} {.(bind (io var N) M)} ε→w = ≡→w (ε→w) 
+i→w {X} {(app (abs M) N)} {.(bind (io var N) M)} ε→w = ≡→w (ε→w)
    ((~ bind-nat2 (↑→ i) (io var (Λ→ i N)) M) !
-   ((~ ext≃ (bind-ext λ {o → refl; (i x) → refl}) (refl {a = M})) 
+   ((~ ext≃ (bind-ext λ {o → refl; (i x) → refl}) (refl {a = M}))
    ! (~ bind-nat1 i (io var N) M)))
 i→w (Z c→w red) = Λ→ (λ z → i z) Z c→w i→w red
 
 
 Λ→→w : ∀ {X Y : Set} {x y : Λ (↑ X)} (f : (↑ X) → Y) → x →w y → Λ→ f x →w Λ→ f y
-Λ→→w {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} f ε→w = ≡→w ε→w 
+Λ→→w {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} f ε→w = ≡→w ε→w
   (~ (bind-nat1 f (io var N) M ! (ext≃ (bind-ext λ {o → refl; (i (i x)) → refl
-                                                            ; (i o) → refl}) (refl {a = M}) 
+                                                            ; (i o) → refl}) (refl {a = M})
   ! bind-nat2 (↑→ f) (io var (Λ→ f N)) M)))
 Λ→→w {X} {Y} {.(app _ Z)} {.(app _ Z)} f (Z c→w red) = Λ→ f Z c→w Λ→→w f red
 
@@ -58,9 +69,9 @@ i→s (append→s x red) = append→s (i→w x) (i→s red)
 
 
 bind→wsubst : ∀ {X Y : Set} {M1 M2 : Λ X} {f : X → Λ Y} → M1 →w M2 → bind f M1 →w bind f M2
-bind→wsubst {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} {f} ε→w = ≡→w ε→w 
-  ((((~ bind-law (lift f) (io var (bind f N)) M) ! 
-  bind-ext (λ { (i x) → (~ bind-nat2 i (io var (bind f N)) (f x)) 
+bind→wsubst {X} {Y} {(app (abs M) N)} {.(bind (io var N) M)} {f} ε→w = ≡→w ε→w
+  ((((~ bind-law (lift f) (io var (bind f N)) M) !
+  bind-ext (λ { (i x) → (~ bind-nat2 i (io var (bind f N)) (f x))
   ! bind-unit1 (f x) ; o → refl}) M) ! bind-law (io var N) f M))
 bind→wsubst (Z c→w red) = bind _ Z c→w bind→wsubst red
 
@@ -77,7 +88,7 @@ redsubst→s : ∀ {X : Set}  {M M' : Λ X} (N : Λ (↑ X)) → M →s M' → N
 redsubst→s N red = bind→ssubst (refl→s N) λ {(i x) → ε→s ; o → red}
 
 subst→s : ∀ {X : Set}  {N N' : Λ X} {M M' : Λ (↑ X)} → M →s M' → N →s N' → M [ N ]ₒ →s M' [ N' ]ₒ
-subst→s red red2 = bind→ssubst red λ { (i x) -> ε→s ; o -> red2 } 
+subst→s red red2 = bind→ssubst red λ { (i x) -> ε→s ; o -> red2 }
 
 -- Checker Problems workaround.
 
@@ -99,17 +110,17 @@ specialcasetranssw : ∀ {X : Set} {N M : Λ X} {M' : Λ (↑ X)} (r : M →s ap
                        → (n : Nat) → lenOf r n → M →s M' [ N ]ₒ
 specialcasetranssw .(app→s (abs→s r0) r1) .n (lenApp (abs→s r0) r1 O n prf prf₁) =
  append→s ε→w (subst→s r0 r1)
-specialcasetranssw .(app→s (abs→s r0) r1) .(S (m ++ n)) 
+specialcasetranssw .(app→s (abs→s r0) r1) .(S (m ++ n))
   (lenApp (abs→s r0) r1 (S m) n prf prf₁) = append→s ε→w (subst→s r0 r1 )
-specialcasetranssw .(app→s (append→s x r0) r1) .(S (m ++ n)) 
+specialcasetranssw .(app→s (append→s x r0) r1) .(S (m ++ n))
   (lenApp (append→s x r0) r1 .(S m) n (lenRed .x .r0 m prf) prf₁) =
   append→s (_ c→w x) (specialcasetranssw (app→s r0 r1) (m ++ n) (lenApp r0 r1 m n prf  prf₁))
-specialcasetranssw .(append→s x r) .(S m) (lenRed x r m prf) = 
+specialcasetranssw .(append→s x r) .(S m) (lenRed x r m prf) =
   append→s x (specialcasetranssw r m prf)
 
 BuildLenRed : ∀ {X : Set} {M M' : Λ X} → (r : M →s M') → lenOf r (len r)
 BuildLenRed ε→s = lenε
-BuildLenRed (app→s red red₁) = 
+BuildLenRed (app→s red red₁) =
   lenApp red red₁ (len red) (len red₁) (BuildLenRed red) (BuildLenRed red₁)
 BuildLenRed (abs→s red) = lenAbs red (len red) (BuildLenRed red)
 BuildLenRed (append→s x red) = lenRed x red (len red) (BuildLenRed red)
@@ -124,14 +135,14 @@ trans→sw (append→s x red1) (Z c→w red2) = append→s x (trans→sw red1 (Z
 trans→s : ∀ {X : Set} {M M' N : Λ X} → M →s M' → M' →s N → M →s N
 trans→s ε→s red2 = red2
 trans→s (app→s red1 red3) (app→s red2 red4) = app→s (trans→s red1 red2) (trans→s red3 red4)
-trans→s (app→s red1 red3) (append→s x red2) = trans→s (trans→sw (app→s red1 red3) x) red2 
+trans→s (app→s red1 red3) (append→s x red2) = trans→s (trans→sw (app→s red1 red3) x) red2
 trans→s (abs→s red1) (abs→s red2) = abs→s (trans→s red1 red2)
 trans→s (append→s x red1) red2 = append→s x (trans→s red1 red2)
 
 singlestepstand : ∀ {X : Set} {M M' N : Λ X} → M →s M' → M' ⟶ N → M →s N
-singlestepstand (app→s (abs→s red1) red3) (redex M _) = 
+singlestepstand (app→s (abs→s red1) red3) (redex M _) =
   trans→s (wtos ε→w) (subst→s red1 red3)
-singlestepstand (app→s (append→s x red1) red3) (redex M _) = 
+singlestepstand (app→s (append→s x red1) red3) (redex M _) =
   trans→s (app→s (append→s x red1) red3) (wtos ε→w)
 singlestepstand (app→s red1 red3) (appL→ red2) = app→s (singlestepstand red1 red2) red3
 singlestepstand (app→s red1 red3) (appR→ red2) = app→s red1 (singlestepstand red3 red2)

@@ -15,11 +15,14 @@ appendR : ∀ {X : Set} {R : Rel X} {x y z : X} → (R *) x y → (R *) y z → 
 appendR (ε* x) yz = yz
 appendR (c* r xy) yz = c* r (appendR xy yz)
 
-≡R : ∀ {X : Set} {R : Rel X} {x y z : X} → R x y → y ≡ z → R x z 
+≡R : ∀ {X : Set} {R : Rel X} {x y z : X} → R x y → y ≡ z → R x z
 ≡R input refl = input
 
 -- i→R : ∀ {X : Set} (R : Rel (Λ X)) (R' : Rel (Λ (↑ X))) {x y : Λ X} → R x y → R' (Λ↑ (i x)) (Λ↑ (i y))
 
+mono* : ∀ {X} (R Q : Rel X) → (∀ {s t : X} → R s t → Q s t) → ∀ {s t : X} → (R *) s t → (Q *) s t
+mono* R Q H (ε* _) = ε* _
+mono* R Q H (c* x st) = c* (H x) (mono* R Q H st)
 
 infix 15 _⟶_
 
@@ -50,6 +53,18 @@ _⇒_ = (_⟶_)*
 append⇒ : ∀ {X : Set} {L M N : Λ X} → L ⇒ M → M ⇒ N → L ⇒ N
 append⇒ = appendR {R = _⟶_}
 
+appL⇒ : ∀ {X : Set} {L1 L2 M : Λ X} → L1 ⇒ L2 → app L1 M ⇒ app L2 M
+appL⇒ (ε* _) = ε* _
+appL⇒ (c* x L12) = c* (appL→ x) (appL⇒ L12)
+
+appR⇒ : ∀ {X : Set} {L M1 M2 : Λ X} → M1 ⇒ M2 → app L M1 ⇒ app L M2
+appR⇒ (ε* _) = ε* _
+appR⇒ (c* x M12) = c* (appR→ x) (appR⇒ M12)
+
+abs⇒ :  ∀ {X : Set} {M1 M2 : Λ (↑ X)} → M1 ⇒ M2 → abs M1 ⇒ abs M2
+abs⇒ (ε* _) = ε* _
+abs⇒ (c* x M12) = c* (abs→ x ) (abs⇒ M12)
+
 infix 15 _⇉_
 
 -- Parallel Reduction
@@ -68,7 +83,7 @@ map⇉ f (abs⇉ ρ) = abs⇉ (map⇉ (↑→ f) ρ )
 map⇉ f (app⇉ ρ₀ ρ₁) = app⇉ (map⇉ f ρ₀) (map⇉ f ρ₁)
 map⇉ f (red⇉ {M} {M'} {N} {N'} ρ₀ ρ₁)
   = ⇉≡ (red⇉ (map⇉ (↑→ f) ρ₀) (map⇉ f ρ₁) ) (~ (subst→ f M' N' ))
-  
+
 refl⇉ : ∀ {X} (M : Λ X) → M ⇉ M
 refl⇉ (var x) = ε⇉
 refl⇉ (app M₀ M₁) = app⇉ (refl⇉ M₀) (refl⇉ M₁)
@@ -96,18 +111,18 @@ bind⇉subst : ∀ {X Y : Set} {M1 M2 : Λ X} {f g : X → Λ Y} → M1 ⇉ M2
              → (∀ x → f x ⇉ g x)
              → bind f M1 ⇉ bind g M2
 bind⇉subst ε⇉ prf = prf _
-bind⇉subst (abs⇉ red) prf = abs⇉ (bind⇉subst red 
+bind⇉subst (abs⇉ red) prf = abs⇉ (bind⇉subst red
   λ {(i x) → map⇉ i (prf x) ; o → refl⇉ (var o)})
 bind⇉subst (app⇉ red red₁) prf = app⇉ (bind⇉subst red prf) (bind⇉subst red₁ prf)
-bind⇉subst {g = g} (red⇉ {M} {M'} {N} {N'} red red₁) prf = 
+bind⇉subst {g = g} (red⇉ {M} {M'} {N} {N'} red red₁) prf =
   let law1 = bind-law (io var N') g M'
       law2 = bind-law (lift g) (io var (bind g N')) M'
-  in ⇉≡ (red⇉ (bind⇉subst {g = lift g} red λ {o → ε⇉; (i x) → map⇉ i (prf x)}) (bind⇉subst red₁ prf)) 
-     (~ law2 ! bind-ext (λ {o → refl; (i x) → (~ bind-nat2 i (io var (bind g N')) (g x)) ! bind-unit1 (g x)}) M' ! law1) 
+  in ⇉≡ (red⇉ (bind⇉subst {g = lift g} red λ {o → ε⇉; (i x) → map⇉ i (prf x)}) (bind⇉subst red₁ prf))
+     (~ law2 ! bind-ext (λ {o → refl; (i x) → (~ bind-nat2 i (io var (bind g N')) (g x)) ! bind-unit1 (g x)}) M' ! law1)
 
 ⇉-subst : ∀ {X : Set} {M M'} {N N' : Λ X} →
             M ⇉ M' → N ⇉ N' → M [ N ]ₒ ⇉ M' [ N' ]ₒ
-⇉-subst rd1 rd2 = bind⇉subst rd1 (λ {(i x) → ε⇉; o → rd2}) 
+⇉-subst rd1 rd2 = bind⇉subst rd1 (λ {(i x) → ε⇉; o → rd2})
 
 nf : ∀ {X : Set} → Λ X → Set
 nf {X} M = ∀ (N : Λ X) → M ⟶ N → ⊥
@@ -120,19 +135,19 @@ nf {X} M = ∀ (N : Λ X) → M ⟶ N → ⊥
 --     rleg : R N node
 -- open Conf
 record contracta {X : Set} (M : Λ X) : Set where
-  constructor contr 
+  constructor contr
   field
     tgt : Λ X
     red : M ⟶ tgt
 
-pure : ∀ {X : Set} → Λ X → Set  
+pure : ∀ {X : Set} → Λ X → Set
 pure {X} M = ∀ (C D : contracta M) → C ≡ D
 
 allNFarePure : ∀ {X : Set} (M : Λ X) → nf M → pure M
 allNFarePure M nf (contr tgt red) D = exfalso (nf tgt red)
 
 contracta≡ : ∀ {X : Set} {M N : Λ X} → M ≡ N → contracta M → contracta N
-contracta≡ refl C = C 
+contracta≡ refl C = C
 
 pure≡ : ∀ {X : Set} {M N : Λ X} → M ≡ N → pure M → pure N
 pure≡ refl prf = prf
