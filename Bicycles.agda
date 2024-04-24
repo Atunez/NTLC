@@ -32,6 +32,15 @@ data InfiniteSolutions {X : Set} : Set where
 yxy : ∀ {X} → Λ (↑ (↑ X))
 yxy = abs (abs ((app (app (var o) (var (i o))) (var o))) )
 
+data TwoCycleSolutionsNormalized {X : Set} : Set where
+  pure0n : ∀ {M : Λ X} → M ≡ app ω ω → TwoCycleSolutionsNormalized
+  -- pure
+  -- yellow box between (28) and (29)
+  pure1n : ∀ {M P Q : Λ X} → M ≡ app (app Q P) Q → Q ≡ abs (abs (app (app (var o) (var (i o))) (var o))) → pure M → TwoCycleSolutionsNormalized
+  pure2n : ∀ {M P Q : Λ X} {L : Λ (↑ (↑ X))} → M ≡ app (app Q P) Q → Q ≡ abs (abs (app (app (var o) L) (var o))) → L [ io (io var P) Q ] ≡ P → pure M → TwoCycleSolutionsNormalized
+  pure3n : ∀ {M P : Λ X} → M ≡ app (app P P) P → P ≡ abs (abs (app (app (var o) (var o)) (var (i o)))) → TwoCycleSolutionsNormalized
+  pure4n : ∀ {M P : Λ X} → M ≡ app (app P P) P → P ≡ abs (abs (app (app (var o) (var (i o))) (var (i o)))) → TwoCycleSolutionsNormalized
+
 
 data TwoCycleSolutions {X : Set} : Set where
   -- Omega, the one-cycle
@@ -49,7 +58,7 @@ data TwoCycleSolutions {X : Set} : Set where
   imp4 : ∀ {M P Q : Λ X} {L : Λ (↑ (↑ X))} → M ≡ app Q Q → Q ≡ app (abs (abs (app (var o) L))) P → L [ io (io var P) Q ] ≡ Q → TwoCycleSolutions
   imp5 : ∀ {M P Q : Λ X} → M ≡ app (app P P) Q → P ≡ abs (abs (app (app (var (i o)) (var (i o))) (var o))) → TwoCycleSolutions
   imp6 : ∀ {M P Q : Λ X} {L : Λ (↑ (↑ X))} → M ≡ app (app P P) Q → P ≡ abs (abs (app (app (var (i o)) L) (var o))) → L [ io (io var P) Q ] ≡ P → TwoCycleSolutions
-  -- imp7 : ∀ {M P : Λ X} → M ≡ app (app P P) P → P ≡ abs (abs (app (app (var o) (var (i o))) (var (i o)))) → TwoCycleSolutions 
+  -- imp7 : ∀ {M P : Λ X} → M ≡ app (app P P) P → P ≡ abs (abs (app (app (var o) (var (i o))) (var (i o)))) → TwoCycleSolutions
   -- infinite
   inf : InfiniteSolutions {X} → TwoCycleSolutions
 
@@ -66,3 +75,23 @@ _[_,,_] {X} M P Q  = M [ io (io var P) Q ]
 -- case2 : ∀ {X} (L : Λ (↑ (↑ X))) (P Q : Λ X) → L [ Q ,, P ] ≡ app (app (abs (abs L)) P) Q → TwoCycleSolutions {X}
 -- case2 L P Q = {!   !}
 
+
+record pure2loop {X : Set} : Set where
+  constructor p2l
+  field
+    -- Xd : dec X
+    A : Λ (↑ X)
+    B : Λ X
+    red : A [ io var B ] ⟶ (app (abs A) B)
+    pur : pure (A [ io var B ])
+
+record pureMatch {X} (M : Λ X) : Set where
+  field
+    cxt : Λ (↑ X)
+    ploop : pure2loop
+    M=C[Δ] :  M ≡ (cxt [ io var (app (abs (pure2loop.A ploop)) (pure2loop.B ploop)) ]) -- where open pure2loop ploop
+-- pureMatch (p2l A B red pur) C M = M ≡ (C [ io var (app (abs A) B) ])
+
+-- wrapper : ∀ {X} (M N : Λ X) → pure M → pure N → M ⟶ N → N ⟶ M → pureMatch M ⊔ pureMatch N
+-- wrapper M N pM pN rM rN = {!   !}
+-- wrapper2 : ∀ {X} (M N : Λ X) (p : pure M) (q : pure N) → (r : M ⟶ N) → (l : N ⟶ M) → pureMatch (wrapper1 M N p q r l)
